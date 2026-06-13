@@ -22,7 +22,7 @@ data:
 
     server {
       listen 80;
-      resolver 192.168.4.1 valid=300s ipv6=off;
+      resolver 8.8.8.8 valid=300s ipv6=off;
 
       access_log /var/log/nginx/access.log wsdebug;
 
