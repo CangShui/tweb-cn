@@ -32,10 +32,8 @@ const PREMIUM_SUFFIX = '_premium';
 const RETRY_TIMEOUT_CLIENT = 3000;
 const RETRY_TIMEOUT_DOWNLOAD = 3000;
 
-// Telegram reverse proxy origin. This maps Telegram Web endpoints like:
-//   wss://kws1.web.telegram.org/apiws       -> wss://api.888888.org/kws1/apiws
-//   https://pluto.web.telegram.org/apiw1    -> https://api.888888.org/pluto/apiw1
-const TG_PROXY_ORIGIN = 'api.888888.org';
+// 修改此处
+const TG_PROXY_ORIGIN = window.__TG_PROXY__;
 
 export function getTelegramConnectionSuffix(connectionType: ConnectionType) {
   return connectionType === 'client' ? '' : '-1';
