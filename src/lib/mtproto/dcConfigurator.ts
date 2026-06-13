@@ -33,7 +33,7 @@ const RETRY_TIMEOUT_CLIENT = 3000;
 const RETRY_TIMEOUT_DOWNLOAD = 3000;
 
 // 修改此处
-const TG_PROXY_ORIGIN = window.__TG_PROXY__;
+const TG_PROXY_ORIGIN = '__TG_PROXY_ORIGIN__';
 
 export function getTelegramConnectionSuffix(connectionType: ConnectionType) {
   return connectionType === 'client' ? '' : '-1';
