@@ -134,11 +134,7 @@ curl http://127.0.0.1:30303/healthz
 curl -I http://127.0.0.1:30302
 ```
 
-```
-http://服务器IP:30302     # Telegram Web K
-http://服务器IP:30303/e8r4h98w4gwe8949wg4ew98api # Telegram API 反代
-```
-如果你前面还有宿主机 Nginx/宝塔/反代，域名配置为：
+Nginx/宝塔/反代，域名配置为：
 ```
 /      -> 127.0.0.1:30302
 /e8r4h98w4gwe8949wg4ew98api -> 127.0.0.1:30303
