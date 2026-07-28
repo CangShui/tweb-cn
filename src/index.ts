@@ -21,7 +21,9 @@ import rootScope from '@lib/rootScope';
 import IS_TOUCH_SUPPORTED from '@environment/touchSupport';
 import I18n, {checkLangPackForUpdates, i18n, LangPackKey} from '@lib/langPack';
 import {initBlockSponsored} from '@helpers/sponsoredMessages';
+import {initContentFilter} from '@helpers/contentFilter';
 initBlockSponsored();
+initContentFilter();
 import '@helpers/peerIdPolyfill';
 import '@lib/polyfill';
 import '@lib/debug/mountLogExport'; // main-thread-only: wires window.downloadLogs / collectLogs
