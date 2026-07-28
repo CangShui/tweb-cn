@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "tweb",
   "version": "1.0.0",
   "description": "",
@@ -78,5 +78,5 @@
     "vitest": "^4.1.0",
     "ws": "^8.20.0"
   },
-  "packageManager": "pnpm@9.15.3+sha512.1f79bc245a66eb0b07c5d4d83131240774642caaa86ef7d0434ab47c0d16f66b04e21e0c086eb61e62c77efc4d7f7ec071afad3796af64892fae66509173893a"
+  "packageManager": "pnpm@10.15.1+sha512.c0b10a0a0b0939c507ba0089a05e9e59ad7cf21fb1611c2b1a856fcf431abc14ba410c1bc4de7a29e789dfe88ae0a9ca9aa19474768100f1ef788c2d1b0e86c8"
 }
