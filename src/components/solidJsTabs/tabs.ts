@@ -1,4 +1,4 @@
-﻿import {CancellablePromise} from '@helpers/cancellablePromise';
+import {CancellablePromise} from '@helpers/cancellablePromise';
 import {AccountPasskeys, AccountPassword, Authorization, ChannelParticipant, Chat, ChatFull, ChatParticipant, DialogFilter, ExportedChatlistInvite, GlobalPrivacySettings, Passkey, WebAuthorization} from '@layer';
 import type SidebarSlider from '@components/slider';
 import type {SliderSuperTab} from '@components/slider';

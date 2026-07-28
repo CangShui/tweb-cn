@@ -19,7 +19,7 @@ services:
       - ./proxy-default.conf:/etc/nginx/conf.d/default.conf:ro
 
   telegram-web-k:
-    image: ghcr.io/cangshui/tweb-cn:1.0.7
+    image: ghcr.io/cangshui/tweb-cn
     container_name: telegram-web-k
     restart: always
     ports:

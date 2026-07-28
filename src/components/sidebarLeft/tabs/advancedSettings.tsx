@@ -1,4 +1,4 @@
-﻿import {createSignal, onMount} from 'solid-js';
+import {createSignal, onMount} from 'solid-js';
 import Section from '@components/section';
 import Row from '@components/rowTsx';
 import CheckboxFieldTsx from '@components/checkboxFieldTsx';

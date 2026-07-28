@@ -1,4 +1,4 @@
-﻿import {createSignal, For, onMount, Show} from 'solid-js';
+import {createSignal, For, onMount, Show} from 'solid-js';
 import ButtonMenuToggle from '@components/buttonMenuToggle';
 import {AppPrivacyAndSecurityTab} from '@components/solidJsTabs/tabs';
 import {AppChatFoldersTab} from '@components/solidJsTabs/tabs';
@@ -39,6 +39,7 @@ import showLogOutPopup from '@components/popups/logOut';
 import {useSuperTab} from '@components/solidJsTabs/superTabProvider';
 import {usePromiseCollector} from '@components/solidJsTabs/promiseCollector';
 import {subscribeOn} from '@helpers/solid/subscribeOn';
+import {isTestMode} from '@helpers/testMode';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper — wraps a sub-tab declaration. If the tab has a static `getInitArgs`,
@@ -165,6 +166,10 @@ const Settings = () => {
   };
 
   const updateActiveSessions = (overwrite?: boolean) => {
+    if(isTestMode()) {
+      setAuthCount('0');
+      return Promise.resolve({authorizations: []} as any);
+    }
     return getAuthorizations(overwrite).then((auths) => {
       authorizations = auths.authorizations;
       setAuthCount('' + authorizations.length);
@@ -192,10 +197,12 @@ const Settings = () => {
   // ── Premium section. Signal-backed so `<Show>` re-evaluates when the
   //    "purchase blocked" check resolves before `selectTab` fires — the section
   //    either appears with the rest of the tab, or doesn't appear at all.
-  const [premiumBlocked, setPremiumBlocked] = createSignal(false);
-  promiseCollector.collect(
-    Promise.resolve(apiManagerProxy.isPremiumPurchaseBlocked()).then(setPremiumBlocked)
-  );
+  const [premiumBlocked, setPremiumBlocked] = createSignal(isTestMode() ? true : false);
+  if(!isTestMode()) {
+    promiseCollector.collect(
+      Promise.resolve(apiManagerProxy.isPremiumPurchaseBlocked()).then(setPremiumBlocked)
+    );
+  }
 
   // ── Reactive star balances (drive both the visibility and titleRight text
   //    of stars / starsTon rows).

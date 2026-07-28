@@ -1,4 +1,4 @@
-﻿import {providedTabs} from '@components/solidJsTabs/providedTabs';
+import {providedTabs} from '@components/solidJsTabs/providedTabs';
 import {SuperTabProvider} from '@components/solidJsTabs/superTabProvider';
 import {
   AppAddMembersTab,

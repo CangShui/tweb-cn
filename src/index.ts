@@ -1,4 +1,4 @@
-﻿/* @refresh reload */
+/* @refresh reload */
 
 // must run before any other module — under the preview flag the first swaps
 // every DOM timer for worker-driven ones (hidden tabs throttle/freeze timers)

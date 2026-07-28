@@ -5,6 +5,7 @@ import isNativeVoiceRecorderSupported from '@helpers/voiceRecorder/isNativeSuppo
 import rootScope from '@lib/rootScope';
 
 import {disposeActiveAuthFlow} from '@/pages/mountAuthFlow';
+import {isTestMode} from '@helpers/testMode';
 
 let bootstrapped = false;
 
@@ -23,6 +24,10 @@ export async function bootstrapIm(): Promise<void> {
   bootstrapped = true;
 
   await rootScope.managers.appStateManager.pushToState('authState', {_: 'authStateSignedIn'});
+
+  if(isTestMode()) {
+    await setupTestState();
+  }
 
   const pageChatsEl = document.getElementById('page-chats');
   if(pageChatsEl) pageChatsEl.style.display = '';
@@ -67,4 +72,28 @@ export async function bootstrapIm(): Promise<void> {
   }, 1000);
 }
 
+
+async function setupTestState() {
+  // Inject a minimal fake user so the settings UI can render without MTProto
+  const fakeUserId = 111111111;
+  const fakeUser = {
+    _: 'user',
+    id: fakeUserId,
+    pFlags: {},
+    first_name: 'Test',
+    last_name: 'User',
+    username: 'test',
+    phone: '1234567890',
+    access_hash: '0',
+    flags: 0
+  };
+
+  const managers = rootScope.managers;
+  // @ts-ignore - inject fake user into manager
+  managers.appUsersManager.saveUsers([fakeUser]);
+  rootScope.myId = fakeUserId as any;
+
+  // Wait a tick for state to settle
+  await new Promise(r => setTimeout(r, 10));
+}
 export default bootstrapIm;

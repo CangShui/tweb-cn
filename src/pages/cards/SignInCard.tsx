@@ -21,6 +21,7 @@ import commonStateStorage from '@lib/commonStateStorage';
 import {TrueDcId} from '@types';
 
 import AuthCard from '@/pages/AuthCard';
+import {enableTestMode} from '@helpers/testMode';
 import {CardSpec, useAuthFlow} from '@/pages/authFlow';
 import styles from '@/pages/authFlow.module.scss';
 
@@ -273,6 +274,12 @@ export default function SignInCard(_props: {spec: Spec}) {
         text="Login.QR.Login"
       />
       <PasskeyLoginButton disabled={submitting()} />
+      <div style="margin-top: 16px; text-align: center;">
+        <a href="#" onClick={(e: Event) => { e.preventDefault(); enableTestMode(); toIm(); }}
+           style="color: var(--secondary-color); font-size: 14px; text-decoration: none;">
+          测试入口（跳过登录）
+        </a>
+      </div>
     </AuthCard>
   );
 }
