@@ -298,8 +298,8 @@ namespace I18n {
     // tweb-cn: override with Chinese translations from local lang.ts
     for(const k of Object.keys(lang)) {
       const v = (lang as any)[k];
-      if(typeof v === "string" && /[\u4e00-\u9fff]/.test(v)) {
-        strings.set(k as LangPackKey, {_: "langPackString", key: k, value: v} as any);
+      if(typeof v === 'string' && /[\u4e00-\u9fff]/.test(v)) {
+        strings.set(k as LangPackKey, {_: 'langPackString', key: k, value: v} as any);
       }
     }
 
