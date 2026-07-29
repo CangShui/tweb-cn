@@ -60,18 +60,44 @@ function hideByMid(mid: string) {
 }
 
 function checkBubble(bubble: HTMLElement) {
-  console.warn('[tweb-cn] checkBubble text=', (bubble.querySelector('.message')?.textContent||'').substring(0, 60));
   if(bubble.style.display === 'none') return;
+
   const msgKws = getMessageKeywords();
-  if(!msgKws.length) return;
-  const msgEl = bubble.querySelector('.message');
-  if(!msgEl) return;
-  const text = (msgEl.textContent || '').toLowerCase();
-  for(const kw of msgKws) {
-    if(kw && text.includes(kw.toLowerCase())) {
-      const mid = bubble.getAttribute('data-mid');
-      if(mid) hideByMid(mid);
-      return;
+  const userKws = getUserKeywords();
+  const hasMsgKws = msgKws.length > 0;
+  const hasUserKws = userKws.length > 0;
+
+  if(!hasMsgKws && !hasUserKws) return;
+
+  // Check message content keywords
+  if(hasMsgKws) {
+    const msgEl = bubble.querySelector('.message');
+    if(msgEl) {
+      const text = (msgEl.textContent || '').toLowerCase();
+      console.warn('[tweb-cn] checkBubble text=', text.substring(0, 60));
+      for(const kw of msgKws) {
+        if(kw && text.includes(kw.toLowerCase())) {
+          const mid = bubble.getAttribute('data-mid');
+          if(mid) hideByMid(mid);
+          return;
+        }
+      }
+    }
+  }
+
+  // Check user name keywords
+  if(hasUserKws) {
+    const peerTitle = bubble.querySelector('.peer-title');
+    if(peerTitle) {
+      const name = (peerTitle.textContent || '').toLowerCase();
+      console.warn('[tweb-cn] checkBubble userName=', name.substring(0, 40));
+      for(const kw of userKws) {
+        if(kw && name.includes(kw.toLowerCase())) {
+          const mid = bubble.getAttribute('data-mid');
+          if(mid) hideByMid(mid);
+          return;
+        }
+      }
     }
   }
 }
@@ -106,30 +132,29 @@ function stopObserver() {
 /* ── Init / Refresh ── */
 
 export function initContentFilter(): void {
-  console.warn('[tweb-cn] initContentFilter entered, keywords=', getMessageKeywords());
+  console.warn('[tweb-cn] initContentFilter entered, msgKw=', getMessageKeywords(), 'userKw=', getUserKeywords());
   if(isBlockPinned()) setBlockPinned(true);
 
   const msgKws = getMessageKeywords();
-  if(msgKws.length) {
+  const userKws = getUserKeywords();
+  if(msgKws.length || userKws.length) {
     startObserver();
-    // Scan already-rendered
     document.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
   }
 }
 
 export function refreshContentFilter(): void {
   setBlockPinned(isBlockPinned());
-  // Clear old CSS
   if(filterStyle) { filterStyle.textContent = ''; filteredMids.clear(); }
   stopObserver();
 
   const msgKws = getMessageKeywords();
-  if(msgKws.length) {
+  const userKws = getUserKeywords();
+  if(msgKws.length || userKws.length) {
     startObserver();
     document.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
   }
-  // If no keywords, unhide previously hidden
-  if(!msgKws.length) {
+  if(!msgKws.length && !userKws.length) {
     document.querySelectorAll('.bubble[style*="display: none"]').forEach(b => {
       (b as HTMLElement).style.display = '';
     });
