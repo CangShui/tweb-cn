@@ -241,7 +241,16 @@ namespace I18n {
 
       if(!TEST_LOCAL) pushLocal();
       strings = strings.concat(...[langPack1.strings, langPack2.strings].filter(Boolean));
-      if(TEST_LOCAL) pushLocal();
+      // tweb-cn: re-apply only Chinese-translated local strings to override server
+      [localLangPack1, localLangPack2].forEach((l) => {
+        const zhOnly: any = {};
+        for(const k of Object.keys(l.default)) {
+          if(/[\u4e00-\u9fff]/.test((l.default as any)[k])) {
+            zhOnly[k] = (l.default as any)[k];
+          }
+        }
+        formatLocalStrings(zhOnly, strings);
+      });
 
       langPack1.strings = strings;
       langPack1.countries = countries;
