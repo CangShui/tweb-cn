@@ -5299,16 +5299,14 @@ export class AppMessagesManager extends AppManager {
     if(!messages || (messages as any).saved) return messages;
     (messages as any).saved = true;
     messages.forEach((message, idx, arr) => {
-      if(AppMessagesManager.messageFilter && !AppMessagesManager.messageFilter(message)) {
+      if(typeof window !== 'undefined' && (() => { const kws = (localStorage.getItem('tweb_cn_msg_keywords') || '').split(',').map((s: string) => s.trim()).filter(Boolean); if(!kws.length) return true; const t = ((message as any).message || '').toLowerCase(); return !kws.some((k: string) => k && t.includes(k.toLowerCase())); })() === false) {
         arr[idx] = null;
         return;
       }
       arr[idx] = this.saveMessage(message, options);
     });
-
     return messages;
   }
-
   public saveMessageMedia(message: {
     media?: MessageMedia,
     reply_media?: MessageMedia,
@@ -11158,3 +11156,4 @@ class Batcher<Key, Id, Result> {
     }
   }
 }
+return;
