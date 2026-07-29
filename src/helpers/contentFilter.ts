@@ -1,3 +1,4 @@
+import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
 /*
  * tweb-cn: Content filtering on the main thread.
  * Uses MutationObserver to watch only NEWLY ADDED bubbles.
@@ -21,6 +22,7 @@ export function isBlockPinned(): boolean {
 
 export function setBlockPinned(enabled: boolean): void {
   localStorage.setItem(STORAGE_PINNED, enabled ? '1' : '0');
+  queueSyncToSavedMessages();
   if(enabled) {
     if(!pinnedStyle) {
       pinnedStyle = document.createElement('style');
@@ -39,11 +41,11 @@ export function setBlockPinned(enabled: boolean): void {
 export function getMessageKeywords(): string[] {
   return (localStorage.getItem(STORAGE_MSG_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
 }
-export function setMessageKeywords(v: string): void { localStorage.setItem(STORAGE_MSG_KW, v); }
+export function setMessageKeywords(v: string): void { localStorage.setItem(STORAGE_MSG_KW, v); queueSyncToSavedMessages(); }
 export function getUserKeywords(): string[] {
   return (localStorage.getItem(STORAGE_USER_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
 }
-export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_USER_KW, v); }
+export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_USER_KW, v); queueSyncToSavedMessages(); }
 
 /* ── Filter ── */
 

@@ -1,3 +1,4 @@
+import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
 /*
  * tweb-cn: Block sponsored messages (ads) feature.
  * Reads/writes localStorage key 'tweb_cn_block_ads' and injects/removes
@@ -24,6 +25,7 @@ export function isBlockSponsored(): boolean {
 
 export function setBlockSponsored(enabled: boolean): void {
   localStorage.setItem(STORAGE_KEY, enabled ? '1' : '0');
+  queueSyncToSavedMessages();
   if(enabled) {
     getStyleElement();
   } else {

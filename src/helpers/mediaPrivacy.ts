@@ -1,3 +1,4 @@
+import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
 const STORAGE_ENABLED = 'tweb_cn_restrict_images';
 const STORAGE_MODE = 'tweb_cn_restrict_images_mode';
 const STORAGE_START = 'tweb_cn_restrict_images_start';
@@ -50,6 +51,7 @@ export function isImageRestrictionEnabled(): boolean {
 
 export function setImageRestrictionEnabled(enabled: boolean): void {
   localStorage.setItem(STORAGE_ENABLED, enabled ? '1' : '0');
+  queueSyncToSavedMessages();
   emitChange();
 }
 
@@ -59,6 +61,7 @@ export function getImageRestrictionMode(): ImageRestrictionMode {
 
 export function setImageRestrictionMode(mode: ImageRestrictionMode): void {
   localStorage.setItem(STORAGE_MODE, mode);
+  queueSyncToSavedMessages();
   emitChange();
 }
 
@@ -73,6 +76,7 @@ export function getImageRestrictionEnd(): string {
 export function setImageRestrictionSchedule(start: string, end: string): void {
   localStorage.setItem(STORAGE_START, start);
   localStorage.setItem(STORAGE_END, end);
+  queueSyncToSavedMessages();
   emitChange();
 }
 
