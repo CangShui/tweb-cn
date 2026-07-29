@@ -11156,4 +11156,4 @@ class Batcher<Key, Id, Result> {
     }
   }
 }
-return;
+

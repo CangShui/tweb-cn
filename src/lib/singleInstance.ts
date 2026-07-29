@@ -92,7 +92,7 @@ export class SingleInstance extends EventListenerBase<{
     this.log.warn('activated our client');
   };
 
-  private onOtherClient = () => {
+  private onOtherClient = () => { return; // tweb-cn: disabled
     this.deactivateInstance('otherClient');
     rootScope.managers.all.networkerFactory.stopAll();
     this.log.warn('deactivated our client');
@@ -126,7 +126,7 @@ export class SingleInstance extends EventListenerBase<{
     }
   }
 
-  private deactivateInstance(reason: InstanceDeactivateReason) {
+  private deactivateInstance(reason: InstanceDeactivateReason) { return; // tweb-cn: all deactivation paths disabled
     if(this.masterInstance || this.deactivated) {
       return;
     }
@@ -193,7 +193,8 @@ export class SingleInstance extends EventListenerBase<{
       this.masterInstance = false;
       rootScope.managers.all.networkerFactory.stopAll();
       this.log.warn('now idle instance', newInstance);
-      this.deactivateTimeout ||= window.setTimeout(() => this.deactivateInstance('tabs'), DEACTIVATE_TIMEOUT);
+      // tweb-cn: disabled
+      // tweb-cn: tabs deactivation disabled
     }
   };
 }
