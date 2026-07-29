@@ -93,9 +93,12 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
     return ret;
   }
 
-  if(isImageRestrictionActive()) {
-    console.warn('[tweb-cn] image restriction forced manual photo download');
+  uploadingFileName ??= (message as Message.message)?.uploadingFileName?.[0];
+  const restrictImages = isImageRestrictionActive() && !uploadingFileName;
+  if(restrictImages) {
+    console.warn('[tweb-cn] image restriction suppressed photo preview and forced manual download');
     autoDownloadSize = 0;
+    noThumb = true;
   }
   let noAutoDownload = autoDownloadSize === 0;
 
@@ -142,42 +145,44 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
       aspecter.style.width = set.size.width + 'px';
       aspecter.style.height = set.size.height + 'px';
 
-      const gotThumb = getMediaThumbIfNeeded({
-        photo,
-        cacheContext,
-        useBlur: useBlur !== undefined ? useBlur : !noBlur,
-        ignoreCache: true,
-        onlyStripped: true
-      });
-      if(gotThumb) {
-        loadThumbPromise = gotThumb.loadPromise;
-        const thumbImage = gotThumb.image; // local scope
-        thumbImage.classList.add('media-photo');
-        container.append(thumbImage);
-      } else {
-        const res = await wrapPhoto({
-          container,
-          message,
+      if(!restrictImages) {
+        const gotThumb = getMediaThumbIfNeeded({
           photo,
-          boxWidth: 0,
-          boxHeight: 0,
-          size,
-          lazyLoadQueue,
-          isOut,
-          loadPromises,
-          middleware,
-          withoutPreloader: true,
-          withTail,
-          autoDownloadSize,
-          noBlur,
-          noThumb: true,
-          blurAfter: true,
-          managers
-          // noFadeIn: true
+          cacheContext,
+          useBlur: useBlur !== undefined ? useBlur : !noBlur,
+          ignoreCache: true,
+          onlyStripped: true
         });
-        const thumbImage = res.images.full;
-        thumbImage.classList.add('media-photo', 'thumbnail');
-        // container.append(thumbImage);
+        if(gotThumb) {
+          loadThumbPromise = gotThumb.loadPromise;
+          const thumbImage = gotThumb.image; // local scope
+          thumbImage.classList.add('media-photo');
+          container.append(thumbImage);
+        } else {
+          const res = await wrapPhoto({
+            container,
+            message,
+            photo,
+            boxWidth: 0,
+            boxHeight: 0,
+            size,
+            lazyLoadQueue,
+            isOut,
+            loadPromises,
+            middleware,
+            withoutPreloader: true,
+            withTail,
+            autoDownloadSize,
+            noBlur,
+            noThumb: true,
+            blurAfter: true,
+            managers
+            // noFadeIn: true
+          });
+          const thumbImage = res.images.full;
+          thumbImage.classList.add('media-photo', 'thumbnail');
+          // container.append(thumbImage);
+        }
       }
 
       container.classList.add('media-container-fitted');
@@ -231,9 +236,8 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
   const needFadeIn = (thumbImage || !cacheContext.downloaded) && liteMode.isAvailable('animations') && !noFadeIn;
 
   let preloader: ProgressivePreloader;
-  uploadingFileName ??= (message as Message.message)?.uploadingFileName?.[0];
   if(!withoutPreloader) {
-    if(!cacheContext.downloaded || uploadingFileName) {
+    if(!cacheContext.downloaded || uploadingFileName || restrictImages) {
       preloader = new ProgressivePreloader({
         attachMethod: 'prepend',
         isUpload: !!uploadingFileName
@@ -304,7 +308,12 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
     (size as PhotoSize.photoSize).w >= 150 &&
     (size as PhotoSize.photoSize).h >= 150
   ) || noAutoDownload;
-  const load = async() => {
+  const load = async(forceDownload = false) => {
+    if(forceDownload) {
+      console.warn('[tweb-cn] image restriction manual photo download requested');
+      noAutoDownload = undefined;
+    }
+
     if(noAutoDownload && !withoutPreloader && preloader) {
       preloader.construct();
       preloader.setManual();
@@ -314,7 +323,7 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
     const cacheContext = apiManagerProxy.getCacheContext(photo, size?.type);
     if(
       preloader &&
-      !cacheContext.downloaded &&
+      (forceDownload || !cacheContext.downloaded) &&
       !withoutPreloader &&
       canAttachPreloader
     ) {
@@ -329,10 +338,15 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
   };
 
   if(preloader) {
-    preloader.setDownloadFunction(load);
+    preloader.setDownloadFunction(restrictImages ? () => load(true) : () => load());
   }
 
-  if(cacheContext.downloaded) {
+  if(restrictImages && preloader) {
+    preloader.construct();
+    preloader.setManual();
+    preloader.attach(container);
+    loadPromise = Promise.resolve();
+  } else if(cacheContext.downloaded) {
     loadThumbPromise = loadPromise = (await load()).render;
   } else {
     if(!lazyLoadQueue) loadPromise = (await load()).render;
