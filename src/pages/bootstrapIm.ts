@@ -6,7 +6,6 @@ import rootScope from '@lib/rootScope';
 
 import {disposeActiveAuthFlow} from '@/pages/mountAuthFlow';
 import {isTestMode} from '@helpers/testMode';
-import {setupMessageFilter} from '@helpers/contentFilter';
 
 let bootstrapped = false;
 
@@ -30,7 +29,6 @@ export async function bootstrapIm(): Promise<void> {
     await setupTestState();
   }
 
-  setupMessageFilter();
 
   const pageChatsEl = document.getElementById('page-chats');
   if(pageChatsEl) pageChatsEl.style.display = '';
