@@ -23,7 +23,9 @@ import I18n, {checkLangPackForUpdates, i18n, LangPackKey} from '@lib/langPack';
 import {initBlockSponsored} from '@helpers/sponsoredMessages';
 import {initContentFilter} from '@helpers/contentFilter';
 initBlockSponsored();
+console.warn('[tweb-cn] calling initContentFilter...');
 initContentFilter();
+console.warn('[tweb-cn] initContentFilter done');
 import '@helpers/peerIdPolyfill';
 import '@lib/polyfill';
 import '@lib/debug/mountLogExport'; // main-thread-only: wires window.downloadLogs / collectLogs

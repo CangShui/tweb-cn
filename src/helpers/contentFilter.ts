@@ -48,6 +48,7 @@ export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_
 /* ── Filter ── */
 
 function hideByMid(mid: string) {
+  console.warn('[tweb-cn] HIDING mid=', mid);
   if(filteredMids.has(mid)) return;
   filteredMids.add(mid);
   if(!filterStyle) {
@@ -59,6 +60,7 @@ function hideByMid(mid: string) {
 }
 
 function checkBubble(bubble: HTMLElement) {
+  console.warn('[tweb-cn] checkBubble text=', (bubble.querySelector('.message')?.textContent||'').substring(0, 60));
   if(bubble.style.display === 'none') return;
   const msgKws = getMessageKeywords();
   if(!msgKws.length) return;
@@ -85,6 +87,7 @@ function scanNode(node: Node) {
 }
 
 function startObserver() {
+  console.warn('[tweb-cn] MutationObserver starting');
   if(observer) return;
   observer = new MutationObserver(mutations => {
     for(const m of mutations) {
@@ -103,6 +106,7 @@ function stopObserver() {
 /* ── Init / Refresh ── */
 
 export function initContentFilter(): void {
+  console.warn('[tweb-cn] initContentFilter entered, keywords=', getMessageKeywords());
   if(isBlockPinned()) setBlockPinned(true);
 
   const msgKws = getMessageKeywords();
