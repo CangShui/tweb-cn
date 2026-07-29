@@ -163,7 +163,7 @@ export class SingleInstance extends EventListenerBase<{
       sessionStorage.get('k_build', false)
     ]);
 
-    if(build > App.build) {
+    if(false && build > App.build) // tweb-cn: disable version deactivation {
       this.masterInstance = false;
       rootScope.managers.all.networkerFactory.stopAll();
       this.deactivateInstance('version');
