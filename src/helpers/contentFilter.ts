@@ -51,6 +51,7 @@ export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_
 /* ── CSS injection ── */
 
 function hideMessageByMid(mid: string) {
+  console.warn('[tweb-cn] HIDING mid=', mid);
   if(filteredMids.has(mid)) return;
   filteredMids.add(mid);
   if(!filterStyle) {
@@ -64,7 +65,7 @@ function hideMessageByMid(mid: string) {
 function checkAndHide(message: any) {
   const msgKws = getMessageKeywords();
   const userKws = getUserKeywords();
-
+  console.warn('[tweb-cn] checkAndHide: kws=', msgKws, 'text=', (message.message||'').substring(0, 60));
   if(msgKws.length) {
     const text = (message.message || '').toLowerCase();
     for(const kw of msgKws) {
@@ -84,6 +85,7 @@ function checkAndHide(message: any) {
 /* ── history_append listener ── */
 
 function onHistoryAppend(e: any) {
+  console.warn('[tweb-cn] history_append FIRED, msg:', (e?.message||e)?.message?.substring(0, 60), 'mid:', (e?.message||e)?.mid||(e?.message||e)?.id);
   const msg = e?.message || e;
   if(!msg || !msg.message) return;
   checkAndHide(msg);
@@ -92,10 +94,12 @@ function onHistoryAppend(e: any) {
 /* ── Init ── */
 
 export function initContentFilter(): void {
+  console.warn('[tweb-cn] initContentFilter called');
   if(isBlockPinned()) setBlockPinned(true);
 
   // Listen for history_append on the MAIN thread
   rootScope.addEventListener('history_append', onHistoryAppend);
+  console.warn('[tweb-cn] history_append listener registered');
 
   // Scan already-rendered messages on init (for cache-loaded messages)
   setTimeout(() => {
@@ -117,6 +121,7 @@ export function initContentFilter(): void {
 }
 
 export function refreshContentFilter(): void {
+  console.warn('[tweb-cn] refreshContentFilter called');
   setBlockPinned(isBlockPinned());
   if(filterStyle) {
     filterStyle.textContent = '';
