@@ -1,11 +1,8 @@
 /*
- * tweb-cn: Content filtering via main-thread event listener.
- * Listens for history_append on the MAIN thread (where localStorage
- * is available), checks keywords, and injects CSS to hide matched messages.
- * Zero DOM scanning, zero Worker dependency.
+ * tweb-cn: Content filtering on the main thread.
+ * Uses MutationObserver to watch only NEWLY ADDED bubbles.
+ * No full-DOM scanning. Keywords from localStorage.
  */
-
-import rootScope from '@lib/rootScope';
 
 const STORAGE_PINNED = 'tweb_cn_block_pinned';
 const STORAGE_MSG_KW = 'tweb_cn_msg_keywords';
@@ -14,6 +11,7 @@ const STORAGE_USER_KW = 'tweb_cn_user_keywords';
 let pinnedStyle: HTMLStyleElement | null = null;
 let filterStyle: HTMLStyleElement | null = null;
 const filteredMids = new Set<string>();
+let observer: MutationObserver | null = null;
 
 /* ── Pinned messages ── */
 
@@ -36,22 +34,20 @@ export function setBlockPinned(enabled: boolean): void {
   }
 }
 
-/* ── Keywords get/set ── */
+/* ── Keywords ── */
 
 export function getMessageKeywords(): string[] {
   return (localStorage.getItem(STORAGE_MSG_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
 }
 export function setMessageKeywords(v: string): void { localStorage.setItem(STORAGE_MSG_KW, v); }
-
 export function getUserKeywords(): string[] {
   return (localStorage.getItem(STORAGE_USER_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
 }
 export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_USER_KW, v); }
 
-/* ── CSS injection ── */
+/* ── Filter ── */
 
-function hideMessageByMid(mid: string) {
-  console.warn('[tweb-cn] HIDING mid=', mid);
+function hideByMid(mid: string) {
   if(filteredMids.has(mid)) return;
   filteredMids.add(mid);
   if(!filterStyle) {
@@ -62,83 +58,76 @@ function hideMessageByMid(mid: string) {
   filterStyle.textContent += '[data-mid="' + mid + '"]{display:none!important}';
 }
 
-function checkAndHide(message: any) {
-  const msgKws = getMessageKeywords();
-  const userKws = getUserKeywords();
-  console.warn('[tweb-cn] checkAndHide: kws=', msgKws, 'text=', (message.message||'').substring(0, 60));
-  if(msgKws.length) {
-    const text = (message.message || '').toLowerCase();
-    for(const kw of msgKws) {
-      if(kw && text.includes(kw.toLowerCase())) {
-        const mid = message.mid || message.id;
-        if(mid != null) hideMessageByMid(String(mid));
-        return;
-      }
-    }
-  }
-
-  if(userKws.length && message.from_id) {
-    // User keyword matching: todo enhance with peer name cache
-  }
-}
-
-/* ── history_append listener ── */
-
-function onHistoryAppend(e: any) {
-  console.warn('[tweb-cn] history_append FIRED, msg:', (e?.message||e)?.message?.substring(0, 60), 'mid:', (e?.message||e)?.mid||(e?.message||e)?.id);
-  const msg = e?.message || e;
-  if(!msg || !msg.message) return;
-  checkAndHide(msg);
-}
-
-/* ── Init ── */
-
-export function initContentFilter(): void {
-  console.warn('[tweb-cn] initContentFilter called');
-  if(isBlockPinned()) setBlockPinned(true);
-
-  // Listen for history_append on the MAIN thread
-  rootScope.addEventListener('history_append', onHistoryAppend);
-  console.warn('[tweb-cn] history_append listener registered');
-
-  // Scan already-rendered messages on init (for cache-loaded messages)
-  setTimeout(() => {
-    const msgKws = getMessageKeywords();
-    if(!msgKws.length) return;
-    document.querySelectorAll('.bubble[data-mid]').forEach(bubble => {
-      const msgEl = bubble.querySelector('.message');
-      if(!msgEl) return;
-      const text = (msgEl.textContent || '').toLowerCase();
-      for(const kw of msgKws) {
-        if(kw && text.includes(kw.toLowerCase())) {
-          const mid = bubble.getAttribute('data-mid');
-          if(mid) hideMessageByMid(mid);
-          break;
-        }
-      }
-    });
-  }, 2000);
-}
-
-export function refreshContentFilter(): void {
-  console.warn('[tweb-cn] refreshContentFilter called');
-  setBlockPinned(isBlockPinned());
-  if(filterStyle) {
-    filterStyle.textContent = '';
-    filteredMids.clear();
-  }
+function checkBubble(bubble: HTMLElement) {
+  if(bubble.style.display === 'none') return;
   const msgKws = getMessageKeywords();
   if(!msgKws.length) return;
-  document.querySelectorAll('.bubble[data-mid]').forEach(bubble => {
-    const msgEl = bubble.querySelector('.message');
-    if(!msgEl) return;
-    const text = (msgEl.textContent || '').toLowerCase();
-    for(const kw of msgKws) {
-      if(kw && text.includes(kw.toLowerCase())) {
-        const mid = bubble.getAttribute('data-mid');
-        if(mid) hideMessageByMid(mid);
-        break;
+  const msgEl = bubble.querySelector('.message');
+  if(!msgEl) return;
+  const text = (msgEl.textContent || '').toLowerCase();
+  for(const kw of msgKws) {
+    if(kw && text.includes(kw.toLowerCase())) {
+      const mid = bubble.getAttribute('data-mid');
+      if(mid) hideByMid(mid);
+      return;
+    }
+  }
+}
+
+function scanNode(node: Node) {
+  if(node instanceof HTMLElement) {
+    if(node.classList.contains('bubble')) {
+      checkBubble(node);
+    } else {
+      node.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
+    }
+  }
+}
+
+function startObserver() {
+  if(observer) return;
+  observer = new MutationObserver(mutations => {
+    for(const m of mutations) {
+      for(const node of m.addedNodes) {
+        scanNode(node);
       }
     }
   });
+  observer.observe(document.body, {childList: true, subtree: true});
+}
+
+function stopObserver() {
+  if(observer) { observer.disconnect(); observer = null; }
+}
+
+/* ── Init / Refresh ── */
+
+export function initContentFilter(): void {
+  if(isBlockPinned()) setBlockPinned(true);
+
+  const msgKws = getMessageKeywords();
+  if(msgKws.length) {
+    startObserver();
+    // Scan already-rendered
+    document.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
+  }
+}
+
+export function refreshContentFilter(): void {
+  setBlockPinned(isBlockPinned());
+  // Clear old CSS
+  if(filterStyle) { filterStyle.textContent = ''; filteredMids.clear(); }
+  stopObserver();
+
+  const msgKws = getMessageKeywords();
+  if(msgKws.length) {
+    startObserver();
+    document.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
+  }
+  // If no keywords, unhide previously hidden
+  if(!msgKws.length) {
+    document.querySelectorAll('.bubble[style*="display: none"]').forEach(b => {
+      (b as HTMLElement).style.display = '';
+    });
+  }
 }
