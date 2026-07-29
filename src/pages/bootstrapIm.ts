@@ -31,7 +31,6 @@ export async function bootstrapIm(): Promise<void> {
   }
 
   setupMessageFilter();
-  }
 
   const pageChatsEl = document.getElementById('page-chats');
   if(pageChatsEl) pageChatsEl.style.display = '';
@@ -84,8 +83,8 @@ async function setupTestState() {
     _: 'user',
     id: fakeUserId,
     pFlags: {},
-    first_name: 'Test',
-    last_name: 'User',
+    first_name: '测试用户',
+    last_name: '',
     username: 'test',
     phone: '1234567890',
     access_hash: '0',

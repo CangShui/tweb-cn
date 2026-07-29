@@ -296,6 +296,7 @@ namespace I18n {
       strings.set(string.key as LangPackKey, string);
     }
 
+
     if(langPack.countries) {
       countriesList.length = 0;
       countriesList.push(...langPack.countries.countries);

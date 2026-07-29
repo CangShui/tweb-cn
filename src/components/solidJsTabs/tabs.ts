@@ -837,6 +837,6 @@ const _origAddMembersInit = (AppAddMembersTab.prototype as any).init;
 
 export const AppAdvancedSettingsTab =
   scaffoldSolidJSTab({
-    title: 'AdvancedSettings' as any,
+    title: (() => '高级设置') as any,
     getComponentModule: () => import('../sidebarLeft/tabs/advancedSettings')
   });

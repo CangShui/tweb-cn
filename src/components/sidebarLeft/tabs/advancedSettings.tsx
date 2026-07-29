@@ -1,4 +1,4 @@
-import {createEffect, createSignal, onMount} from 'solid-js';
+import {createSignal, onMount} from 'solid-js';
 import Section from '@components/section';
 import Row from '@components/rowTsx';
 import CheckboxFieldTsx from '@components/checkboxFieldTsx';
@@ -16,8 +16,8 @@ export default function AdvancedSettings() {
 
   const [blockAdsChecked, setBlockAdsChecked] = createSignal(isBlockSponsored());
   const [blockPinnedChecked, setBlockPinnedChecked] = createSignal(isBlockPinned());
-  const [msgKeywords, setMsgKeywords] = createSignal(getMessageKeywords().join(', '));
-  const [userKeywords, setUserKeywords_] = createSignal(getUserKeywords().join(', '));
+  const [msgKeywords, setMsgKeywords] = createSignal(getMessageKeywords().join('\n'));
+  const [userKeywords, setUserKeywords_] = createSignal(getUserKeywords().join('\n'));
 
   const onToggleBlockAds = (checked: boolean) => {
     setBlockAdsChecked(checked);
@@ -31,22 +31,22 @@ export default function AdvancedSettings() {
 
   let msgKwTimeout: ReturnType<typeof setTimeout>;
   const onMsgKwInput = (e: Event) => {
-    const val = (e.target as HTMLInputElement).value;
+    const val = (e.target as HTMLTextAreaElement).value;
     setMsgKeywords(val);
     clearTimeout(msgKwTimeout);
     msgKwTimeout = setTimeout(() => {
-      setMessageKeywords(val);
+      setMessageKeywords(val.replace(/\n/g, ','));
       refreshContentFilter();
     }, 400);
   };
 
   let userKwTimeout: ReturnType<typeof setTimeout>;
   const onUserKwInput = (e: Event) => {
-    const val = (e.target as HTMLInputElement).value;
+    const val = (e.target as HTMLTextAreaElement).value;
     setUserKeywords_(val);
     clearTimeout(userKwTimeout);
     userKwTimeout = setTimeout(() => {
-      setUserKeywords(val);
+      setUserKeywords(val.replace(/\n/g, ','));
       refreshContentFilter();
     }, 400);
   };
@@ -56,55 +56,63 @@ export default function AdvancedSettings() {
   });
 
   return (
-    <Section name={<span>高级设置</span>}>
-      <Row>
-        <Row.CheckboxFieldToggle>
-          <CheckboxFieldTsx
-            toggle
-            checked={blockAdsChecked()}
-            onChange={onToggleBlockAds}
-          />
-        </Row.CheckboxFieldToggle>
-        <Row.Title>屏蔽广告消息</Row.Title>
-      </Row>
-      <Row>
-        <Row.CheckboxFieldToggle>
-          <CheckboxFieldTsx
-            toggle
-            checked={blockPinnedChecked()}
-            onChange={onToggleBlockPinned}
-          />
-        </Row.CheckboxFieldToggle>
-        <Row.Title>屏蔽置顶消息</Row.Title>
-      </Row>
+    <>
+      <Section name={<span>内容屏蔽</span>}>
+        <div class="profile-buttons">
+          <Row>
+            <Row.CheckboxFieldToggle>
+              <CheckboxFieldTsx
+                toggle
+                checked={blockAdsChecked()}
+                onChange={onToggleBlockAds}
+              />
+            </Row.CheckboxFieldToggle>
+            <Row.Title>屏蔽广告消息</Row.Title>
+          </Row>
+          <Row>
+            <Row.CheckboxFieldToggle>
+              <CheckboxFieldTsx
+                toggle
+                checked={blockPinnedChecked()}
+                onChange={onToggleBlockPinned}
+              />
+            </Row.CheckboxFieldToggle>
+            <Row.Title>屏蔽置顶消息</Row.Title>
+          </Row>
+        </div>
+      </Section>
+
       <Section name={<span>消息关键字屏蔽</span>}>
-        <div style="padding: 0 16px 8px;">
-          <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px;">
-            包含以下关键字的消息将被隐藏（逗号分隔）
+        <div style="padding: 0 0 4px;">
+          <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px; padding: 0 16px;">
+            包含以下关键字的消息将被隐藏（每行一个关键字）
           </div>
-          <input
-            type="text"
-            value={msgKeywords()}
-            onInput={onMsgKwInput}
-            placeholder="例如: 广告, 推广, 抽奖"
-            style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface-color); color: var(--primary-color); font-size: 14px; outline: none; box-sizing: border-box;"
-          />
+          <div style="padding: 0 16px;">
+            <textarea
+              class="content-filter-textarea"
+              value={msgKeywords()}
+              onInput={onMsgKwInput}
+              placeholder={'广告\n推广\n抽奖\n福利\n红包'}
+            />
+          </div>
         </div>
       </Section>
+
       <Section name={<span>用户关键字屏蔽</span>}>
-        <div style="padding: 0 16px 8px;">
-          <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px;">
-            来自用户名包含以下关键字的用户的消息将被隐藏（逗号分隔）
+        <div style="padding: 0 0 4px;">
+          <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px; padding: 0 16px;">
+            来自用户名包含以下关键字的用户的消息将被隐藏（每行一个关键字）
           </div>
-          <input
-            type="text"
-            value={userKeywords()}
-            onInput={onUserKwInput}
-            placeholder="例如: 机器人, bot"
-            style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface-color); color: var(--primary-color); font-size: 14px; outline: none; box-sizing: border-box;"
-          />
+          <div style="padding: 0 16px;">
+            <textarea
+              class="content-filter-textarea"
+              value={userKeywords()}
+              onInput={onUserKwInput}
+              placeholder={'机器人\n营销号\n广告号'}
+            />
+          </div>
         </div>
       </Section>
-    </Section>
+    </>
   );
 }

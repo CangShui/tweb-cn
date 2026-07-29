@@ -119,7 +119,7 @@ export function initContentFilter(): void {
   });
 
   // Also listen for peer data updates
-  rootScope.addEventListener('peer_changed', (e: any) => {
+  rootScope.addEventListener('peer_changed' as any, (e: any) => {
     if(e?.peerId && e?.title) {
       cachePeerName(typeof e.peerId === 'string' ? e.peerId : String(e.peerId), String(e.title));
     }
