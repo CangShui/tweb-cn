@@ -1,16 +1,19 @@
 /*
- * tweb-cn: Content filtering helpers.
- * - Block pinned messages
- * - Block messages by content keywords
- * - Block messages by sender name keywords
+ * tweb-cn: Content filtering at the data layer.
+ * - Pinned messages: CSS blocking (instant, zero performance cost)
+ * - Message keywords: intercepts saveMessages BEFORE storage (zero DOM scan)
+ * - User keywords: intercepts saveMessages with peer name cache
  */
+
+import rootScope from '@lib/rootScope';
 
 const STORAGE_PINNED = 'tweb_cn_block_pinned';
 const STORAGE_MSG_KW = 'tweb_cn_msg_keywords';
 const STORAGE_USER_KW = 'tweb_cn_user_keywords';
 
-let observer: MutationObserver | null = null;
 let pinnedStyle: HTMLStyleElement | null = null;
+// Synchronous peer name cache: "u123" | "c456" -> display name
+const peerNameCache: Record<string, string> = {};
 
 /* ── Pinned messages ── */
 
@@ -24,149 +27,109 @@ export function setBlockPinned(enabled: boolean): void {
     if(!pinnedStyle) {
       pinnedStyle = document.createElement('style');
       pinnedStyle.id = 'tweb-cn-block-pinned';
-      pinnedStyle.textContent = '.pinned-container.pinned-message { display: none !important; }';
+      pinnedStyle.textContent = '.pinned-container.pinned-message{display:none!important}';
       document.head.appendChild(pinnedStyle);
     }
   } else {
     if(pinnedStyle) { pinnedStyle.remove(); pinnedStyle = null; }
-    const el = document.getElementById('tweb-cn-block-pinned');
-    if(el) el.remove();
+    document.getElementById('tweb-cn-block-pinned')?.remove();
   }
 }
 
-/* ── Message keywords ── */
+/* ── Keywords get/set ── */
 
 export function getMessageKeywords(): string[] {
-  const raw = localStorage.getItem(STORAGE_MSG_KW) || '';
-  return raw.split(',').map(s => s.trim()).filter(Boolean);
+  return (localStorage.getItem(STORAGE_MSG_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
 }
-
-export function setMessageKeywords(keywords: string): void {
-  localStorage.setItem(STORAGE_MSG_KW, keywords);
-}
-
-export function isBlockMessageKeywords(): boolean {
-  return getMessageKeywords().length > 0;
-}
-
-/* ── User keywords ── */
+export function setMessageKeywords(v: string): void { localStorage.setItem(STORAGE_MSG_KW, v); }
+export function isBlockMessageKeywords(): boolean { return getMessageKeywords().length > 0; }
 
 export function getUserKeywords(): string[] {
-  const raw = localStorage.getItem(STORAGE_USER_KW) || '';
-  return raw.split(',').map(s => s.trim()).filter(Boolean);
+  return (localStorage.getItem(STORAGE_USER_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_USER_KW, v); }
+export function isBlockUserKeywords(): boolean { return getUserKeywords().length > 0; }
+
+/* ── Peer name cache ── */
+
+function peerToKey(peer: any): string {
+  if(!peer) return '';
+  if(peer._ === 'peerUser') return 'u' + peer.user_id;
+  if(peer._ === 'peerChannel') return 'c' + peer.channel_id;
+  if(peer._ === 'peerChat') return 'c' + peer.chat_id;
+  return '';
 }
 
-export function setUserKeywords(keywords: string): void {
-  localStorage.setItem(STORAGE_USER_KW, keywords);
+function cachePeerName(peerKey: string, name: string) {
+  if(peerKey && name) peerNameCache[peerKey] = name;
 }
 
-export function isBlockUserKeywords(): boolean {
-  return getUserKeywords().length > 0;
+function getPeerName(peer: any): string {
+  return peerNameCache[peerToKey(peer)] || '';
 }
 
-/* ── MutationObserver: scan new bubbles ── */
+/* ── Data-layer filter hook ── */
 
-function checkBubble(bubble: HTMLElement): void {
-  const msgKws = getMessageKeywords();
-  const userKws = getUserKeywords();
+export function setupMessageFilter(): void {
+  import('@appManagers/appMessagesManager').then(({AppMessagesManager}) => {
+    AppMessagesManager.messageFilter = (message: any): boolean => {
+      const msgKws = getMessageKeywords();
+      const userKws = getUserKeywords();
 
-  if(!msgKws.length && !userKws.length) return;
+      if(!msgKws.length && !userKws.length) return true;
 
-  // Already hidden
-  if(bubble.style.display === 'none') return;
-
-  // Check message content keywords
-  if(msgKws.length) {
-    const msgEl = bubble.querySelector('.message');
-    if(msgEl) {
-      const text = (msgEl.textContent || '').toLowerCase();
-      for(const kw of msgKws) {
-        if(kw && text.includes(kw.toLowerCase())) {
-          bubble.style.display = 'none';
-          return;
+      // Message text filter
+      if(msgKws.length) {
+        const text = (message.message || '').toLowerCase();
+        for(const kw of msgKws) {
+          if(kw && text.includes(kw.toLowerCase())) return false;
         }
       }
-    }
-  }
 
-  // Check user name keywords
-  if(userKws.length) {
-    const nameEl = bubble.querySelector('.peer-title');
-    if(nameEl) {
-      const name = (nameEl.textContent || '').toLowerCase();
-      for(const kw of userKws) {
-        if(kw && name.includes(kw.toLowerCase())) {
-          bubble.style.display = 'none';
-          return;
-        }
-      }
-    }
-  }
-}
-
-function scanAllBubbles(): void {
-  const bubbles = document.querySelectorAll('.bubble');
-  bubbles.forEach(b => checkBubble(b as HTMLElement));
-}
-
-export function initContentFilter(): void {
-  // Init pinned
-  if(isBlockPinned()) setBlockPinned(true);
-
-  // Init observer for new messages
-  const hasFilters = isBlockMessageKeywords() || isBlockUserKeywords();
-  if(!hasFilters) return;
-
-  observer = new MutationObserver((mutations) => {
-    for(const m of mutations) {
-      for(const node of m.addedNodes) {
-        if(node instanceof HTMLElement) {
-          if(node.classList.contains('bubble')) {
-            checkBubble(node);
-          } else {
-            node.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
+      // User name filter
+      if(userKws.length && message.from_id) {
+        const name = getPeerName(message.from_id).toLowerCase();
+        if(name) {
+          for(const kw of userKws) {
+            if(kw && name.includes(kw.toLowerCase())) return false;
           }
         }
+        // If name not in cache yet, try to resolve asynchronously
+        // but don't block the current message
       }
+
+      return true;
+    };
+  });
+}
+
+/* ── Init ── */
+
+export function initContentFilter(): void {
+  if(isBlockPinned()) setBlockPinned(true);
+
+  // Build peer name cache from rootScope events
+  rootScope.addEventListener('history_append', (e: any) => {
+    const msg = e?.message || e;
+    if(!msg || !msg.from_id) return;
+    // Try to cache the sender name from forward info
+    if(msg.fwd_from?.from_name) {
+      cachePeerName(peerToKey(msg.from_id), msg.fwd_from.from_name);
     }
   });
 
-  observer.observe(document.body, {childList: true, subtree: true});
-  scanAllBubbles();
+  // Also listen for peer data updates
+  rootScope.addEventListener('peer_changed', (e: any) => {
+    if(e?.peerId && e?.title) {
+      cachePeerName(typeof e.peerId === 'string' ? e.peerId : String(e.peerId), String(e.title));
+    }
+  });
 }
 
 export function refreshContentFilter(): void {
-  if(observer) {
-    observer.disconnect();
-    observer = null;
-  }
-
-  // Re-apply pinned
   setBlockPinned(isBlockPinned());
-
-  const hasFilters = isBlockMessageKeywords() || isBlockUserKeywords();
-  if(hasFilters) {
-    observer = new MutationObserver((mutations) => {
-      for(const m of mutations) {
-        for(const node of m.addedNodes) {
-          if(node instanceof HTMLElement) {
-            if(node.classList.contains('bubble')) {
-              checkBubble(node);
-            } else {
-              node.querySelectorAll('.bubble').forEach(b => checkBubble(b as HTMLElement));
-            }
-          }
-        }
-      }
-    });
-    observer.observe(document.body, {childList: true, subtree: true});
-    scanAllBubbles();
-  }
-
-  // If no filters active, unhide any previously hidden bubbles
-  if(!hasFilters) {
-    document.querySelectorAll('.bubble[style*="display: none"]').forEach(b => {
-      (b as HTMLElement).style.display = '';
-    });
-  }
+  import('@appManagers/appMessagesManager').then(({AppMessagesManager}) => {
+    AppMessagesManager.messageFilter = null;
+    setupMessageFilter();
+  });
 }

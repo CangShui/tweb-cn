@@ -503,6 +503,8 @@ type InvokeEditMessageMediaArgs = {
 type MessageContext = {searchStorages?: Set<HistoryStorage>};
 
 export class AppMessagesManager extends AppManager {
+  /** tweb-cn: hook for message content filtering before storage */
+  public static messageFilter: ((message: any) => boolean) | null = null;
   private messagesStorageByPeerId: {[peerId: string]: MessagesStorage};
   private groupedMessagesStorage: {[groupId: string]: MessagesStorage}; // will be used for albums
   private scheduledMessagesStorage: {[peerId: PeerId]: MessagesStorage};
@@ -5297,6 +5299,10 @@ export class AppMessagesManager extends AppManager {
     if(!messages || (messages as any).saved) return messages;
     (messages as any).saved = true;
     messages.forEach((message, idx, arr) => {
+      if(AppMessagesManager.messageFilter && !AppMessagesManager.messageFilter(message)) {
+        arr[idx] = null;
+        return;
+      }
       arr[idx] = this.saveMessage(message, options);
     });
 
