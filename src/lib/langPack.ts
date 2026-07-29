@@ -1,4 +1,4 @@
-import type lang from '@/lang';
+import lang from '@/lang';
 import type langSign from '@/langSign';
 import type {State} from '@config/state';
 import {IS_BETA, MOUNT_CLASS_TO} from '@config/debug';
@@ -241,16 +241,6 @@ namespace I18n {
 
       if(!TEST_LOCAL) pushLocal();
       strings = strings.concat(...[langPack1.strings, langPack2.strings].filter(Boolean));
-      // tweb-cn: re-apply only Chinese-translated local strings to override server
-      [localLangPack1, localLangPack2].forEach((l) => {
-        const zhOnly: any = {};
-        for(const k of Object.keys(l.default)) {
-          if(/[\u4e00-\u9fff]/.test((l.default as any)[k])) {
-            zhOnly[k] = (l.default as any)[k];
-          }
-        }
-        formatLocalStrings(zhOnly, strings);
-      });
 
       langPack1.strings = strings;
       langPack1.countries = countries;
@@ -303,6 +293,14 @@ namespace I18n {
 
     for(const string of langPack.strings) {
       strings.set(string.key as LangPackKey, string);
+    }
+
+    // tweb-cn: override with Chinese translations from local lang.ts
+    for(const k of Object.keys(lang)) {
+      const v = (lang as any)[k];
+      if(typeof v === "string" && /[\u4e00-\u9fff]/.test(v)) {
+        strings.set(k as LangPackKey, {_: "langPackString", key: k, value: v} as any);
+      }
     }
 
 
