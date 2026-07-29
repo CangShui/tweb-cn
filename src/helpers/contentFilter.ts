@@ -58,12 +58,12 @@ function hideMessageByMid(mid: string) {
     filterStyle.id = 'tweb-cn-msg-filter';
     document.head.appendChild(filterStyle);
   }
-  filterStyle.textContent += `[data-mid="${mid}"]{display:none!important}`;
+  filterStyle.textContent += '[data-mid="' + mid + '"]{display:none!important}';
 }
 
 function checkAndHide(message: any) {
-
-
+  const msgKws = getMessageKeywords();
+  const userKws = getUserKeywords();
 
   if(msgKws.length) {
     const text = (message.message || '').toLowerCase();
@@ -77,13 +77,11 @@ function checkAndHide(message: any) {
   }
 
   if(userKws.length && message.from_id) {
-    const peerName = ''; // will be matched via peer-title CSS later
-    // For now, user keyword matching uses peer name from history_append
-    // which doesn't carry the display name. We'll enhance later if needed.
+    // User keyword matching: todo enhance with peer name cache
   }
 }
 
-/* ── Init ── */
+/* ── history_append listener ── */
 
 function onHistoryAppend(e: any) {
   const msg = e?.message || e;
@@ -91,6 +89,9 @@ function onHistoryAppend(e: any) {
   checkAndHide(msg);
 }
 
+/* ── Init ── */
+
+export function initContentFilter(): void {
   if(isBlockPinned()) setBlockPinned(true);
 
   // Listen for history_append on the MAIN thread
@@ -115,13 +116,12 @@ function onHistoryAppend(e: any) {
   }, 2000);
 }
 
+export function refreshContentFilter(): void {
   setBlockPinned(isBlockPinned());
-  // Clear old filter rules and re-scan
   if(filterStyle) {
     filterStyle.textContent = '';
     filteredMids.clear();
   }
-  // Re-scan visible messages
   const msgKws = getMessageKeywords();
   if(!msgKws.length) return;
   document.querySelectorAll('.bubble[data-mid]').forEach(bubble => {
