@@ -21,6 +21,7 @@ import {Middleware} from '@helpers/middleware';
 import liteMode from '@helpers/liteMode';
 import isWebFileLocation from '@appManagers/utils/webFiles/isWebFileLocation';
 import apiManagerProxy from '@lib/apiManagerProxy';
+import {isImageRestrictionActive} from '@helpers/mediaPrivacy';
 
 export default async function wrapPhoto({photo, message, container, boxWidth, boxHeight, withTail, isOut, lazyLoadQueue, middleware, size, withoutPreloader, loadPromises, autoDownloadSize, noBlur, noThumb, noFadeIn, blurAfter, managers = rootScope.managers, processUrl, fadeInElement, onRender, onRenderFinish, useBlur, useRenderCache, canHaveVideoPlayer, uploadingFileName}: {
   photo: MyPhoto | MyDocument | WebDocument | InputWebFileLocation,
@@ -92,6 +93,10 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
     return ret;
   }
 
+  if(isImageRestrictionActive()) {
+    console.warn('[tweb-cn] image restriction forced manual photo download');
+    autoDownloadSize = 0;
+  }
   let noAutoDownload = autoDownloadSize === 0;
 
   if(!size) {
@@ -356,4 +361,3 @@ export default async function wrapPhoto({photo, message, container, boxWidth, bo
 
   return ret;
 }
-

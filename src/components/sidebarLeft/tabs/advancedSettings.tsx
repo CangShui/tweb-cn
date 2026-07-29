@@ -1,14 +1,18 @@
-import {createSignal, onMount} from 'solid-js';
+import {createSignal, onMount, Show} from 'solid-js';
 import Section from '@components/section';
 import Row from '@components/rowTsx';
 import CheckboxFieldTsx from '@components/checkboxFieldTsx';
 import {useSuperTab} from '@components/solidJsTabs/superTabProvider';
 import {isBlockSponsored, setBlockSponsored} from '@helpers/sponsoredMessages';
 import {
-  isBlockImageAvatars,
-  isClickToLoadStickers,
-  setBlockImageAvatars,
-  setClickToLoadStickers
+  getImageRestrictionEnd,
+  getImageRestrictionMode,
+  getImageRestrictionStart,
+  ImageRestrictionMode,
+  isImageRestrictionEnabled,
+  setImageRestrictionEnabled,
+  setImageRestrictionMode,
+  setImageRestrictionSchedule
 } from '@helpers/mediaPrivacy';
 import {
   isBlockPinned, setBlockPinned,
@@ -22,8 +26,10 @@ export default function AdvancedSettings() {
 
   const [blockAdsChecked, setBlockAdsChecked] = createSignal(isBlockSponsored());
   const [blockPinnedChecked, setBlockPinnedChecked] = createSignal(isBlockPinned());
-  const [blockImageAvatarsChecked, setBlockImageAvatarsChecked] = createSignal(isBlockImageAvatars());
-  const [clickToLoadStickersChecked, setClickToLoadStickersChecked] = createSignal(isClickToLoadStickers());
+  const [imageRestrictionChecked, setImageRestrictionChecked] = createSignal(isImageRestrictionEnabled());
+  const [imageRestrictionMode, setImageRestrictionMode_] = createSignal(getImageRestrictionMode());
+  const [imageRestrictionStart, setImageRestrictionStart] = createSignal(getImageRestrictionStart());
+  const [imageRestrictionEnd, setImageRestrictionEnd] = createSignal(getImageRestrictionEnd());
   const [msgKeywords, setMsgKeywords] = createSignal(getMessageKeywords().join('\n'));
   const [userKeywords, setUserKeywords_] = createSignal(getUserKeywords().join('\n'));
 
@@ -37,14 +43,24 @@ export default function AdvancedSettings() {
     setBlockPinned(checked);
   };
 
-  const onToggleBlockImageAvatars = (checked: boolean) => {
-    setBlockImageAvatarsChecked(checked);
-    setBlockImageAvatars(checked);
+  const onToggleImageRestriction = (checked: boolean) => {
+    setImageRestrictionChecked(checked);
+    setImageRestrictionEnabled(checked);
   };
 
-  const onToggleClickToLoadStickers = (checked: boolean) => {
-    setClickToLoadStickersChecked(checked);
-    setClickToLoadStickers(checked);
+  const selectImageRestrictionMode = (mode: ImageRestrictionMode) => {
+    setImageRestrictionMode_(mode);
+    setImageRestrictionMode(mode);
+  };
+
+  const onImageRestrictionTimeChange = (type: 'start' | 'end', e: Event) => {
+    const value = (e.target as HTMLInputElement).value;
+    if(type === 'start') setImageRestrictionStart(value);
+    else setImageRestrictionEnd(value);
+    setImageRestrictionSchedule(
+      type === 'start' ? value : imageRestrictionStart(),
+      type === 'end' ? value : imageRestrictionEnd()
+    );
   };
 
   let msgKwTimeout: ReturnType<typeof setTimeout>;
@@ -100,31 +116,59 @@ export default function AdvancedSettings() {
         </div>
       </Section>
 
-      <Section name={<span>媒体隐私</span>}>
+      <Section name={<span>限制图片模式</span>}>
         <div class="profile-buttons">
           <Row>
             <Row.CheckboxFieldToggle>
               <CheckboxFieldTsx
                 toggle
-                checked={blockImageAvatarsChecked()}
-                onChange={onToggleBlockImageAvatars}
+                checked={imageRestrictionChecked()}
+                onChange={onToggleImageRestriction}
               />
             </Row.CheckboxFieldToggle>
-            <Row.Title>屏蔽图片头像</Row.Title>
-            <Row.Subtitle>不下载头像图片，显示 Telegram 默认头像</Row.Subtitle>
-          </Row>
-          <Row>
-            <Row.CheckboxFieldToggle>
-              <CheckboxFieldTsx
-                toggle
-                checked={clickToLoadStickersChecked()}
-                onChange={onToggleClickToLoadStickers}
-              />
-            </Row.CheckboxFieldToggle>
-            <Row.Title>贴纸点击加载</Row.Title>
-            <Row.Subtitle>聊天中的图片和动画贴纸仅在点击后下载</Row.Subtitle>
+            <Row.Title>限制图片模式</Row.Title>
+            <Row.Subtitle>头像使用默认样式，照片和贴纸改为点击加载</Row.Subtitle>
           </Row>
         </div>
+        <Show when={imageRestrictionChecked()}>
+          <div class="image-restriction-options">
+            <div class="image-restriction-mode">
+              <span>生效方式</span>
+              <div class="image-restriction-segmented">
+                <button
+                  type="button"
+                  classList={{active: imageRestrictionMode() === 'always'}}
+                  onClick={() => selectImageRestrictionMode('always')}
+                >始终开启</button>
+                <button
+                  type="button"
+                  classList={{active: imageRestrictionMode() === 'scheduled'}}
+                  onClick={() => selectImageRestrictionMode('scheduled')}
+                >北京时间定时</button>
+              </div>
+            </div>
+            <Show when={imageRestrictionMode() === 'scheduled'}>
+              <div class="image-restriction-time-row">
+                <label>
+                  <span>开始</span>
+                  <input
+                    type="time"
+                    value={imageRestrictionStart()}
+                    onChange={[onImageRestrictionTimeChange, 'start']}
+                  />
+                </label>
+                <label>
+                  <span>结束</span>
+                  <input
+                    type="time"
+                    value={imageRestrictionEnd()}
+                    onChange={[onImageRestrictionTimeChange, 'end']}
+                  />
+                </label>
+              </div>
+            </Show>
+          </div>
+        </Show>
       </Section>
 
       <Section name={<span>消息关键字屏蔽</span>}>

@@ -138,7 +138,7 @@ import setBlankToAnchor from '@lib/richTextProcessor/setBlankToAnchor';
 import addAnchorListener, {UNSAFE_ANCHOR_LINK_TYPES} from '@helpers/addAnchorListener';
 import {formatDate, formatDaysDuration, formatMonthsDuration} from '@helpers/date';
 import {JSX} from 'solid-js';
-import {isClickToLoadStickers} from '@helpers/mediaPrivacy';
+import {isImageRestrictionActive} from '@helpers/mediaPrivacy';
 import Giveaway, {getGiftAssetName, onGiveawayClick} from '@components/chat/giveaway';
 import PopupGiftLink from '@components/popups/giftLink';
 import PopupPremium from '@components/popups/premium';
@@ -5727,7 +5727,7 @@ export default class ChatBubbles {
     context.bubbleContainer.style.minWidth = container.style.width;
     context.bubbleContainer.style.minHeight = container.style.height;
     const noPremium = (context.messageMedia as MessageMedia.messageMediaDocument)?.pFlags?.nopremium;
-    const clickToLoad = isClickToLoadStickers() &&
+    const clickToLoad = isImageRestrictionActive() &&
       !manual &&
       context.messageMedia?._ !== 'messageMediaDice';
     return callbackify(doc, (doc) => {
@@ -5775,18 +5775,16 @@ export default class ChatBubbles {
 
       if(clickToLoad) {
         console.warn('[tweb-cn] deferred sticker download, docId=', doc.id);
-        const loadButton = Button('btn-circle tweb-cn-sticker-load', {
-          icon: 'download',
-          noRipple: true
-        });
-        loadButton.title = '点击加载贴纸';
-        loadButton.addEventListener('click', async(event) => {
-          cancelEvent(event);
-          loadButton.remove();
+        const preloader = new ProgressivePreloader();
+        preloader.construct();
+        preloader.setManual();
+        preloader.attach(container);
+        preloader.setDownloadFunction(async() => {
           const sticker = await ret;
-          sticker.render = sticker.load();
-        }, {once: true});
-        container.append(loadButton);
+          const promise = sticker.render = sticker.load();
+          preloader.attach(container, false, promise as any);
+          return promise;
+        });
       }
 
       return ret;

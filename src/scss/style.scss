@@ -144,13 +144,58 @@
   line-height: 1.5;
 }
 
-.tweb-cn-sticker-load {
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 48px;
-  height: 48px;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  color: #fff;
-  background: rgba(0, 0, 0, .48);
+.image-restriction-options {
+  display: grid;
+  gap: 12px;
+  padding: 4px 16px 12px;
+
+  label,
+  .image-restriction-mode {
+    display: grid;
+    gap: 6px;
+    color: var(--secondary-color);
+    font-size: 13px;
+  }
+
+  input {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-color);
+    color: var(--primary-color);
+    font: inherit;
+  }
+}
+
+.image-restriction-segmented {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 40px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--light-secondary-text-color);
+
+  button {
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--secondary-color);
+    font: inherit;
+    cursor: pointer;
+
+    &.active {
+      background: var(--surface-color);
+      color: var(--primary-color);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .14);
+    }
+  }
+}
+
+.image-restriction-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
 }
