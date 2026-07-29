@@ -1368,7 +1368,11 @@ export class AppImManager extends EventListenerBase<{
 
       const target = e.target as HTMLElement;
 
-      const isTargetAnInput = (target.tagName === 'INPUT' && !['checkbox', 'radio'].includes((target as HTMLInputElement).type)) || target.isContentEditable;
+      const isTargetAnInput = (
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        (target.tagName === 'INPUT' && !['checkbox', 'radio'].includes((target as HTMLInputElement).type))
+      ) || target.isContentEditable;
 
       // if(target.tagName === 'INPUT') return;
 

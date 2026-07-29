@@ -143,3 +143,14 @@
   font-family: inherit;
   line-height: 1.5;
 }
+
+.tweb-cn-sticker-load {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  color: #fff;
+  background: rgba(0, 0, 0, .48);
+}

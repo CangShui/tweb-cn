@@ -47,6 +47,7 @@ import {resolveElements} from '@solid-primitives/refs';
 import toArray from '@helpers/array/toArray';
 import computeLockColor from '@helpers/computeLockColor';
 import createLoopingMutedVideo from '@helpers/dom/createLoopingMutedVideo';
+import {isBlockImageAvatars, MEDIA_PRIVACY_CHANGE_EVENT} from '@helpers/mediaPrivacy';
 
 const FADE_IN_DURATION = 200;
 const TEST_SWAPPING = 0;
@@ -96,6 +97,15 @@ rootScope.addEventListener('peer_stories', ({peerId}) => {
 rootScope.addEventListener('stories_read', onAvatarStoriesUpdate);
 rootScope.addEventListener('story_deleted', onAvatarStoriesUpdate);
 rootScope.addEventListener('story_new', onAvatarStoriesUpdate);
+
+window.addEventListener(MEDIA_PRIVACY_CHANGE_EVENT, () => {
+  console.warn('[tweb-cn] rerender avatars, blocked=', isBlockImageAvatars());
+  for(const set of avatarsMap.values()) {
+    for(const avatar of set) {
+      avatar.render();
+    }
+  }
+});
 
 
 const getStoriesSegments = async(peerId: PeerId, storyId?: number): Promise<AckedResult<StoriesSegments>> => {
@@ -780,7 +790,7 @@ export const AvatarNew = (props: {
 
     const linkedMonoforumPeer = peer?._ === 'channel' && peer.pFlags?.monoforum && peer.linked_monoforum_id ? await managers.appChatsManager.getChat(peer.linked_monoforum_id.toPeerId?.()) : undefined;
 
-    const photo = getPeerPhoto(linkedMonoforumPeer || peer);
+    const photo = isBlockImageAvatars() ? undefined : getPeerPhoto(linkedMonoforumPeer || peer);
     const avatarAvailable = !!photo;
     const avatarRendered = avatarAvailable && !!media(); // if avatar isn't available, let's reset it
     const sameAccount = props.accountNumber === getCurrentAccount();

@@ -138,6 +138,7 @@ import setBlankToAnchor from '@lib/richTextProcessor/setBlankToAnchor';
 import addAnchorListener, {UNSAFE_ANCHOR_LINK_TYPES} from '@helpers/addAnchorListener';
 import {formatDate, formatDaysDuration, formatMonthsDuration} from '@helpers/date';
 import {JSX} from 'solid-js';
+import {isClickToLoadStickers} from '@helpers/mediaPrivacy';
 import Giveaway, {getGiftAssetName, onGiveawayClick} from '@components/chat/giveaway';
 import PopupGiftLink from '@components/popups/giftLink';
 import PopupPremium from '@components/popups/premium';
@@ -5726,6 +5727,9 @@ export default class ChatBubbles {
     context.bubbleContainer.style.minWidth = container.style.width;
     context.bubbleContainer.style.minHeight = container.style.height;
     const noPremium = (context.messageMedia as MessageMedia.messageMediaDocument)?.pFlags?.nopremium;
+    const clickToLoad = isClickToLoadStickers() &&
+      !manual &&
+      context.messageMedia?._ !== 'messageMediaDice';
     return callbackify(doc, (doc) => {
       if(!context.middleware()) {
         return;
@@ -5741,7 +5745,8 @@ export default class ChatBubbles {
         liteModeKey: manual ? false : 'stickers_chat',
         loop,
         emoji: isEmoji ? context.messageMessage : undefined,
-        withThumb: true,
+        withThumb: !clickToLoad,
+        exportLoad: clickToLoad ? 2 : undefined,
         loadPromises: context.loadPromises,
         isOut: context.isOut,
         noPremium,
@@ -5766,6 +5771,22 @@ export default class ChatBubbles {
       const effectThumb = getStickerEffectThumb(doc);
       if((effectThumb || isEmoji) && (context.isInUnread || context.isOutgoing)/*  || true */) {
         this.observer.observe(context.bubble, this.stickerEffectObserverCallback);
+      }
+
+      if(clickToLoad) {
+        console.warn('[tweb-cn] deferred sticker download, docId=', doc.id);
+        const loadButton = Button('btn-circle tweb-cn-sticker-load', {
+          icon: 'download',
+          noRipple: true
+        });
+        loadButton.title = '点击加载贴纸';
+        loadButton.addEventListener('click', async(event) => {
+          cancelEvent(event);
+          loadButton.remove();
+          const sticker = await ret;
+          sticker.render = sticker.load();
+        }, {once: true});
+        container.append(loadButton);
       }
 
       return ret;

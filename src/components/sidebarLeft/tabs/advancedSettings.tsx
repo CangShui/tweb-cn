@@ -5,6 +5,12 @@ import CheckboxFieldTsx from '@components/checkboxFieldTsx';
 import {useSuperTab} from '@components/solidJsTabs/superTabProvider';
 import {isBlockSponsored, setBlockSponsored} from '@helpers/sponsoredMessages';
 import {
+  isBlockImageAvatars,
+  isClickToLoadStickers,
+  setBlockImageAvatars,
+  setClickToLoadStickers
+} from '@helpers/mediaPrivacy';
+import {
   isBlockPinned, setBlockPinned,
   getMessageKeywords, setMessageKeywords,
   getUserKeywords, setUserKeywords,
@@ -16,6 +22,8 @@ export default function AdvancedSettings() {
 
   const [blockAdsChecked, setBlockAdsChecked] = createSignal(isBlockSponsored());
   const [blockPinnedChecked, setBlockPinnedChecked] = createSignal(isBlockPinned());
+  const [blockImageAvatarsChecked, setBlockImageAvatarsChecked] = createSignal(isBlockImageAvatars());
+  const [clickToLoadStickersChecked, setClickToLoadStickersChecked] = createSignal(isClickToLoadStickers());
   const [msgKeywords, setMsgKeywords] = createSignal(getMessageKeywords().join('\n'));
   const [userKeywords, setUserKeywords_] = createSignal(getUserKeywords().join('\n'));
 
@@ -27,6 +35,16 @@ export default function AdvancedSettings() {
   const onToggleBlockPinned = (checked: boolean) => {
     setBlockPinnedChecked(checked);
     setBlockPinned(checked);
+  };
+
+  const onToggleBlockImageAvatars = (checked: boolean) => {
+    setBlockImageAvatarsChecked(checked);
+    setBlockImageAvatars(checked);
+  };
+
+  const onToggleClickToLoadStickers = (checked: boolean) => {
+    setClickToLoadStickersChecked(checked);
+    setClickToLoadStickers(checked);
   };
 
   let msgKwTimeout: ReturnType<typeof setTimeout>;
@@ -78,6 +96,33 @@ export default function AdvancedSettings() {
               />
             </Row.CheckboxFieldToggle>
             <Row.Title>屏蔽置顶消息</Row.Title>
+          </Row>
+        </div>
+      </Section>
+
+      <Section name={<span>媒体隐私</span>}>
+        <div class="profile-buttons">
+          <Row>
+            <Row.CheckboxFieldToggle>
+              <CheckboxFieldTsx
+                toggle
+                checked={blockImageAvatarsChecked()}
+                onChange={onToggleBlockImageAvatars}
+              />
+            </Row.CheckboxFieldToggle>
+            <Row.Title>屏蔽图片头像</Row.Title>
+            <Row.Subtitle>不下载头像图片，显示 Telegram 默认头像</Row.Subtitle>
+          </Row>
+          <Row>
+            <Row.CheckboxFieldToggle>
+              <CheckboxFieldTsx
+                toggle
+                checked={clickToLoadStickersChecked()}
+                onChange={onToggleClickToLoadStickers}
+              />
+            </Row.CheckboxFieldToggle>
+            <Row.Title>贴纸点击加载</Row.Title>
+            <Row.Subtitle>聊天中的图片和动画贴纸仅在点击后下载</Row.Subtitle>
           </Row>
         </div>
       </Section>
