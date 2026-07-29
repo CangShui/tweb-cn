@@ -6,6 +6,7 @@
  */
 
 import rootScope from '@lib/rootScope';
+import {AppMessagesManager} from '@appManagers/appMessagesManager';
 
 const STORAGE_PINNED = 'tweb_cn_block_pinned';
 const STORAGE_MSG_KW = 'tweb_cn_msg_keywords';
@@ -71,36 +72,34 @@ function getPeerName(peer: any): string {
 /* ── Data-layer filter hook ── */
 
 export function setupMessageFilter(): void {
-  import('@appManagers/appMessagesManager').then(({AppMessagesManager}) => {
-    AppMessagesManager.messageFilter = (message: any): boolean => {
-      const msgKws = getMessageKeywords();
-      const userKws = getUserKeywords();
+  AppMessagesManager.messageFilter = (message: any): boolean => {
+    const msgKws = getMessageKeywords();
+    const userKws = getUserKeywords();
 
-      if(!msgKws.length && !userKws.length) return true;
+    if(!msgKws.length && !userKws.length) return true;
 
-      // Message text filter
-      if(msgKws.length) {
-        const text = (message.message || '').toLowerCase();
-        for(const kw of msgKws) {
-          if(kw && text.includes(kw.toLowerCase())) return false;
+    // Message text filter
+    if(msgKws.length) {
+      const text = (message.message || '').toLowerCase();
+      for(const kw of msgKws) {
+        if(kw && text.includes(kw.toLowerCase())) return false;
+      }
+    }
+
+    // User name filter
+    if(userKws.length && message.from_id) {
+      const name = getPeerName(message.from_id).toLowerCase();
+      if(name) {
+        for(const kw of userKws) {
+          if(kw && name.includes(kw.toLowerCase())) return false;
         }
       }
+      // If name not in cache yet, try to resolve asynchronously
+      // but don't block the current message
+    }
 
-      // User name filter
-      if(userKws.length && message.from_id) {
-        const name = getPeerName(message.from_id).toLowerCase();
-        if(name) {
-          for(const kw of userKws) {
-            if(kw && name.includes(kw.toLowerCase())) return false;
-          }
-        }
-        // If name not in cache yet, try to resolve asynchronously
-        // but don't block the current message
-      }
-
-      return true;
-    };
-  });
+    return true;
+  };
 }
 
 /* ── Init ── */
@@ -128,8 +127,6 @@ export function initContentFilter(): void {
 
 export function refreshContentFilter(): void {
   setBlockPinned(isBlockPinned());
-  import('@appManagers/appMessagesManager').then(({AppMessagesManager}) => {
-    AppMessagesManager.messageFilter = null;
-    setupMessageFilter();
-  });
+  AppMessagesManager.messageFilter = null;
+  setupMessageFilter();
 }
