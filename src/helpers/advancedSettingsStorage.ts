@@ -28,6 +28,15 @@ export type AdvancedSettingsSnapshot = {
   settings: Record<string, string>
 };
 
+export type AdvancedSettingsChangeSource = 'local' | 'sync-restore' | 'sync-default' | 'sync-test' | 'legacy-migration';
+
+export type AdvancedSettingsChangeDetail = {
+  peerId: PeerId,
+  keys: string[],
+  snapshot: AdvancedSettingsSnapshot,
+  source: AdvancedSettingsChangeSource
+};
+
 function getAccountStorageKey(peerId: PeerId): string {
   return ACCOUNT_STORAGE_PREFIX + peerId;
 }
@@ -127,6 +136,23 @@ export function replaceAccountAdvancedSettings(
   return snapshot;
 }
 
+export function emitAdvancedSettingsChange(
+  peerId: PeerId,
+  snapshot: AdvancedSettingsSnapshot,
+  source: AdvancedSettingsChangeSource
+): void {
+  if(typeof(window) === 'undefined') return;
+
+  window.dispatchEvent(new CustomEvent<AdvancedSettingsChangeDetail>(ADVANCED_SETTINGS_CHANGE_EVENT, {
+    detail: {
+      peerId,
+      keys: Object.keys(snapshot.settings),
+      snapshot,
+      source
+    }
+  }));
+}
+
 export function getAdvancedSetting(key: string, fallback = ''): string {
   const peerId = rootScope.myId;
   if(peerId) {
@@ -154,7 +180,7 @@ export function setAdvancedSettings(values: Record<string, string>): void {
     ...values
   }, Date.now());
 
-  window.dispatchEvent(new CustomEvent(ADVANCED_SETTINGS_CHANGE_EVENT, {
-    detail: {peerId, keys: Object.keys(values), snapshot}
+  window.dispatchEvent(new CustomEvent<AdvancedSettingsChangeDetail>(ADVANCED_SETTINGS_CHANGE_EVENT, {
+    detail: {peerId, keys: Object.keys(values), snapshot, source: 'local'}
   }));
 }

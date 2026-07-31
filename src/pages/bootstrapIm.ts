@@ -5,10 +5,8 @@ import isNativeVoiceRecorderSupported from '@helpers/voiceRecorder/isNativeSuppo
 import rootScope from '@lib/rootScope';
 
 import {disposeActiveAuthFlow} from '@/pages/mountAuthFlow';
-import {refreshContentFilter} from '@helpers/contentFilter';
+import {applyAdvancedSettingsEffects, initAdvancedSettingsEffects} from '@helpers/advancedSettingsEffects';
 import {initializeAdvancedSettingsSync} from '@helpers/contentFilterSync';
-import {refreshImageRestriction} from '@helpers/mediaPrivacy';
-import {refreshBlockSponsored} from '@helpers/sponsoredMessages';
 import {isTestMode} from '@helpers/testMode';
 
 let bootstrapped = false;
@@ -59,13 +57,12 @@ export async function bootstrapIm(): Promise<void> {
     (window as any).Recorder = recorder.default;
   }
   appDialogsManager.start();
+  initAdvancedSettingsEffects();
 
   initializeAdvancedSettingsSync().then((initialized) => {
     if(!initialized) return;
 
-    refreshBlockSponsored();
-    refreshContentFilter();
-    refreshImageRestriction();
+    applyAdvancedSettingsEffects();
     console.warn('[tweb-cn] advanced settings initialized for peer=', rootScope.myId);
   });
   // start() toggles body.is-left-column-shown synchronously

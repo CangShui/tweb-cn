@@ -5,6 +5,8 @@ import {
   ADVANCED_SETTINGS_CHANGE_EVENT,
   ADVANCED_SETTINGS_DEFAULTS,
   AdvancedSettingsSnapshot,
+  AdvancedSettingsChangeDetail,
+  emitAdvancedSettingsChange,
   hasLegacyAdvancedSettings,
   normalizeAdvancedSettings,
   readAccountAdvancedSettings,
@@ -222,11 +224,12 @@ async function initializeForPeer(peerId: PeerId): Promise<boolean> {
   const legacySettings = hadLegacySettings ? readLegacyAdvancedSettings() : undefined;
 
   if(isTestMode()) {
-    replaceAccountAdvancedSettings(
+    const snapshot = replaceAccountAdvancedSettings(
       peerId,
       local?.settings || legacySettings || ADVANCED_SETTINGS_DEFAULTS,
       local?.updatedAt || 0
     );
+    emitAdvancedSettingsChange(peerId, snapshot, 'sync-test');
     removeLegacyAdvancedSettings();
     console.warn('[tweb-cn] sync: test mode uses account-local settings only');
     return true;
@@ -240,7 +243,8 @@ async function initializeForPeer(peerId: PeerId): Promise<boolean> {
       console.warn('[tweb-cn] sync: account-local snapshot is newer; cloud update queued');
       shouldWriteCloud = true;
     } else {
-      replaceAccountAdvancedSettings(peerId, remoteSettings.settings, remoteSettings.updatedAt);
+      const snapshot = replaceAccountAdvancedSettings(peerId, remoteSettings.settings, remoteSettings.updatedAt);
+      emitAdvancedSettingsChange(peerId, snapshot, 'sync-restore');
       console.warn('[tweb-cn] sync: cloud snapshot restored for peer=', peerId);
     }
 
@@ -257,11 +261,13 @@ async function initializeForPeer(peerId: PeerId): Promise<boolean> {
     shouldWriteCloud = !!local.updatedAt;
     console.warn('[tweb-cn] sync: no cloud snapshot; account-local snapshot will seed it');
   } else if(legacySettings) {
-    replaceAccountAdvancedSettings(peerId, legacySettings, Date.now());
+    const snapshot = replaceAccountAdvancedSettings(peerId, legacySettings, Date.now());
+    emitAdvancedSettingsChange(peerId, snapshot, 'legacy-migration');
     shouldWriteCloud = true;
     console.warn('[tweb-cn] sync: migrated legacy localStorage settings for peer=', peerId);
   } else {
-    replaceAccountAdvancedSettings(peerId, ADVANCED_SETTINGS_DEFAULTS, 0);
+    const snapshot = replaceAccountAdvancedSettings(peerId, ADVANCED_SETTINGS_DEFAULTS, 0);
+    emitAdvancedSettingsChange(peerId, snapshot, 'sync-default');
     console.warn('[tweb-cn] sync: initialized defaults without creating an empty cloud message');
   }
 
@@ -308,5 +314,9 @@ export function restoreFromSavedMessages(): Promise<boolean> {
 }
 
 if(typeof(window) !== 'undefined') {
-  window.addEventListener(ADVANCED_SETTINGS_CHANGE_EVENT, queueSyncToSavedMessages);
+  window.addEventListener(ADVANCED_SETTINGS_CHANGE_EVENT, (event) => {
+    const detail = (event as CustomEvent<AdvancedSettingsChangeDetail>).detail;
+    if(detail?.source !== 'local') return;
+    queueSyncToSavedMessages();
+  });
 }
