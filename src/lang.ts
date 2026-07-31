@@ -4654,7 +4654,7 @@ const lang = {
 
   'AutoDeletesIn': 'auto-deletes in %s',
 
-  'StorageQuota.Title': 'Estimated storage quota',
+  'StorageQuota.Title': '预计存储配额',
   'StorageQuota.Caption': 'Note that cache required for the app to function properly will not be cleared.',
   'StorageQuota.CachedFiles': 'Cached files',
   'StorageQuota.Images': 'Images',

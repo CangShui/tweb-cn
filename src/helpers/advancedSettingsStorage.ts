@@ -10,7 +10,8 @@ export const ADVANCED_SETTINGS_DEFAULTS: Record<string, string> = {
   tweb_cn_restrict_images_start: '22:00',
   tweb_cn_restrict_images_end: '08:00',
   tweb_cn_msg_keywords: '',
-  tweb_cn_user_keywords: ''
+  tweb_cn_user_keywords: '',
+  tweb_cn_username_ids: ''
 };
 
 const ACCOUNT_STORAGE_PREFIX = 'tweb_cn_advanced_settings_account_';

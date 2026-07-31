@@ -18,6 +18,7 @@ import {
   isBlockPinned, setBlockPinned,
   getMessageKeywords, setMessageKeywords,
   getUserKeywords, setUserKeywords,
+  getUsernameIds, setUsernameIds,
   refreshContentFilter
 } from '@helpers/contentFilter';
 
@@ -32,6 +33,7 @@ export default function AdvancedSettings() {
   const [imageRestrictionEnd, setImageRestrictionEnd] = createSignal(getImageRestrictionEnd());
   const [msgKeywords, setMsgKeywords] = createSignal(getMessageKeywords().join('\n'));
   const [userKeywords, setUserKeywords_] = createSignal(getUserKeywords().join('\n'));
+  const [usernameIds, setUsernameIds_] = createSignal(getUsernameIds().map((username) => '@' + username).join('\n'));
 
   const onToggleBlockAds = (checked: boolean) => {
     setBlockAdsChecked(checked);
@@ -83,6 +85,21 @@ export default function AdvancedSettings() {
       setUserKeywords(val);
       refreshContentFilter();
     }, 400);
+  };
+
+  let usernameIdsTimeout: ReturnType<typeof setTimeout>;
+  const onUsernameIdsInput = (e: Event) => {
+    const val = (e.target as HTMLTextAreaElement).value;
+    setUsernameIds_(val);
+    clearTimeout(usernameIdsTimeout);
+    usernameIdsTimeout = setTimeout(() => {
+      setUsernameIds(val);
+      refreshContentFilter();
+    }, 400);
+  };
+
+  const stopTextareaShortcutLeak = (e: KeyboardEvent) => {
+    e.stopPropagation();
   };
 
   onMount(() => {
@@ -171,33 +188,58 @@ export default function AdvancedSettings() {
         </Show>
       </Section>
 
-      <Section name={<span>消息关键字屏蔽</span>}>
+      <Section name={<span>用户消息屏蔽规则</span>}>
         <div style="padding: 0 0 4px;">
           <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px; padding: 0 16px;">
-            包含以下关键字的消息将被隐藏（每行一个关键字）
+            包含以下规则的消息将被隐藏，支持正则表达式、换行和逗号分隔
           </div>
           <div style="padding: 0 16px;">
             <textarea
               class="content-filter-textarea"
               value={msgKeywords()}
               onInput={onMsgKwInput}
-              placeholder={'广告\n推广\n抽奖\n福利\n红包'}
+              onKeyDown={stopTextareaShortcutLeak}
+              onKeyUp={stopTextareaShortcutLeak}
+              onKeyPress={stopTextareaShortcutLeak}
+              placeholder={'广告\n推广\n啊(.*)哦\n福利,红包'}
             />
           </div>
         </div>
       </Section>
 
-      <Section name={<span>用户关键字屏蔽</span>}>
+      <Section name={<span>用户昵称屏蔽规则</span>}>
         <div style="padding: 0 0 4px;">
           <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px; padding: 0 16px;">
-            来自用户名包含以下关键字的用户的消息将被隐藏（每行一个关键字）
+            来自昵称包含以下规则的用户的消息将被隐藏，支持换行和逗号分隔
           </div>
           <div style="padding: 0 16px;">
             <textarea
               class="content-filter-textarea"
               value={userKeywords()}
               onInput={onUserKwInput}
+              onKeyDown={stopTextareaShortcutLeak}
+              onKeyUp={stopTextareaShortcutLeak}
+              onKeyPress={stopTextareaShortcutLeak}
               placeholder={'机器人\n营销号\n广告号'}
+            />
+          </div>
+        </div>
+      </Section>
+
+      <Section name={<span>用户名屏蔽</span>}>
+        <div style="padding: 0 0 4px;">
+          <div style="color: var(--secondary-color); font-size: 13px; margin-bottom: 6px; padding: 0 16px;">
+            必须填写完整 @用户名 ID 才会屏蔽，支持换行和逗号分隔
+          </div>
+          <div style="padding: 0 16px;">
+            <textarea
+              class="content-filter-textarea"
+              value={usernameIds()}
+              onInput={onUsernameIdsInput}
+              onKeyDown={stopTextareaShortcutLeak}
+              onKeyUp={stopTextareaShortcutLeak}
+              onKeyPress={stopTextareaShortcutLeak}
+              placeholder={'@example_user\n@channel_id'}
             />
           </div>
         </div>

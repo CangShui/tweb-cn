@@ -5853,6 +5853,12 @@ export default class ChatBubbles {
       newBubble.dataset.mid = '' + (isMessage(message) ? message.mid : message.id);
       newBubble.dataset.peerId = '' + (isMessage(message) ? message.peerId : this.chat.peerId);
       newBubble.dataset.timestamp = '' + message.date;
+      if(isMessage(message)) {
+        newBubble.dataset.twebCnFromId = '' + message.fromId;
+        const fromPeer = apiManagerProxy.getPeer(message.fromId);
+        const fromUsername = getPeerActiveUsernames(fromPeer as any)[0];
+        if(fromUsername) newBubble.dataset.twebCnFromUsername = fromUsername.toLowerCase();
+      }
 
       // const bubbleNew: Bubble = this.bubblesNew[message.mid] ??= {
       //   bubble: newBubble,

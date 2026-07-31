@@ -133,17 +133,25 @@ namespace I18n {
         const dateTimeFormat = getDateTimeFormat({hour: 'numeric', minute: 'numeric', hour12: true});
         const date = new Date();
         date.setHours(0);
-        const amText = dateTimeFormat.format(date);
-        amPmCache.am = amText.split(/\s/)[1];
+        amPmCache.am = getDayPeriod(dateTimeFormat, date, 'AM');
         date.setHours(12);
-        const pmText = dateTimeFormat.format(date);
-        amPmCache.pm = pmText.split(/\s/)[1];
+        amPmCache.pm = getDayPeriod(dateTimeFormat, date, 'PM');
       } catch(err) {
         console.error('cannot get am/pm', err);
         amPmCache.am = 'AM';
         amPmCache.pm = 'PM';
       }
     }
+  }
+
+  function getDayPeriod(dateTimeFormat: Intl.DateTimeFormat, date: Date, fallback: string): string {
+    const parts = dateTimeFormat.formatToParts?.(date);
+    const dayPeriod = parts?.find((part) => part.type === 'dayPeriod')?.value;
+    if(dayPeriod) return dayPeriod;
+
+    const text = dateTimeFormat.format(date);
+    const withoutTime = text.replace(/[0-9０-９:：.\s]/g, '');
+    return withoutTime || fallback;
   }
 
   export function setTimeFormat(
@@ -785,4 +793,3 @@ rootScope.addEventListener('langpack_update_too_long', handleUpdateLangPackTooLo
 rootScope.addEventListener('state_cleared', handleStateCleared);
 
 MOUNT_CLASS_TO && (MOUNT_CLASS_TO.I18n = I18n);
-

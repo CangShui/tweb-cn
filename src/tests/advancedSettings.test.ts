@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'vitest';
 import {normalizeAdvancedSettings} from '@helpers/advancedSettingsStorage';
 import {parseAdvancedSettingsSyncText} from '@helpers/advancedSettingsSyncPayload';
-import {parseFilterKeywords} from '@helpers/contentFilter';
+import {normalizeUsername, parseFilterKeywords} from '@helpers/contentFilter';
 
 describe('advanced settings', () => {
   test('parses mixed newline and comma keyword separators', () => {
@@ -12,6 +12,15 @@ describe('advanced settings', () => {
       'promotion',
       'prize'
     ]);
+  });
+
+  test('keeps regular expression message rules intact', () => {
+    const [rule] = parseFilterKeywords('啊(.*)哦');
+    expect(new RegExp(rule, 'i').test('啊吧哦')).toBe(true);
+  });
+
+  test('normalizes exact username ids', () => {
+    expect(normalizeUsername('  @@Example_User  ')).toBe('example_user');
   });
 
   test('keeps explicit empty keyword values in a normalized snapshot', () => {
