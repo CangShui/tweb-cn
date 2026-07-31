@@ -1,4 +1,4 @@
-import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
+import {getAdvancedSetting, setAdvancedSetting} from '@helpers/advancedSettingsStorage';
 /*
  * tweb-cn: Content filtering on the main thread.
  * Uses MutationObserver to watch only NEWLY ADDED bubbles.
@@ -17,12 +17,10 @@ let observer: MutationObserver | null = null;
 /* ── Pinned messages ── */
 
 export function isBlockPinned(): boolean {
-  return localStorage.getItem(STORAGE_PINNED) === '1';
+  return getAdvancedSetting(STORAGE_PINNED, '0') === '1';
 }
 
-export function setBlockPinned(enabled: boolean): void {
-  localStorage.setItem(STORAGE_PINNED, enabled ? '1' : '0');
-  queueSyncToSavedMessages();
+function applyBlockPinned(enabled: boolean): void {
   if(enabled) {
     if(!pinnedStyle) {
       pinnedStyle = document.createElement('style');
@@ -36,16 +34,32 @@ export function setBlockPinned(enabled: boolean): void {
   }
 }
 
+export function setBlockPinned(enabled: boolean): void {
+  setAdvancedSetting(STORAGE_PINNED, enabled ? '1' : '0');
+  applyBlockPinned(enabled);
+}
+
 /* ── Keywords ── */
 
 export function getMessageKeywords(): string[] {
-  return (localStorage.getItem(STORAGE_MSG_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
+  return parseFilterKeywords(getAdvancedSetting(STORAGE_MSG_KW));
 }
-export function setMessageKeywords(v: string): void { localStorage.setItem(STORAGE_MSG_KW, v); queueSyncToSavedMessages(); }
+
+export function setMessageKeywords(v: string): void {
+  setAdvancedSetting(STORAGE_MSG_KW, v);
+}
+
 export function getUserKeywords(): string[] {
-  return (localStorage.getItem(STORAGE_USER_KW) || '').split(',').map(s => s.trim()).filter(Boolean);
+  return parseFilterKeywords(getAdvancedSetting(STORAGE_USER_KW));
 }
-export function setUserKeywords(v: string): void { localStorage.setItem(STORAGE_USER_KW, v); queueSyncToSavedMessages(); }
+
+export function setUserKeywords(v: string): void {
+  setAdvancedSetting(STORAGE_USER_KW, v);
+}
+
+export function parseFilterKeywords(value: string): string[] {
+  return value.split(/[\r\n,\uFF0C]+/).map((keyword) => keyword.trim()).filter(Boolean);
+}
 
 /* ── Filter ── */
 
@@ -135,7 +149,7 @@ function stopObserver() {
 
 export function initContentFilter(): void {
   console.warn('[tweb-cn] initContentFilter entered, msgKw=', getMessageKeywords(), 'userKw=', getUserKeywords());
-  if(isBlockPinned()) setBlockPinned(true);
+  applyBlockPinned(isBlockPinned());
 
   const msgKws = getMessageKeywords();
   const userKws = getUserKeywords();
@@ -146,7 +160,7 @@ export function initContentFilter(): void {
 }
 
 export function refreshContentFilter(): void {
-  setBlockPinned(isBlockPinned());
+  applyBlockPinned(isBlockPinned());
   if(filterStyle) { filterStyle.textContent = ''; filteredMids.clear(); }
   stopObserver();
 

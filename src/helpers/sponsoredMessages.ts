@@ -1,4 +1,4 @@
-import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
+import {getAdvancedSetting, setAdvancedSetting} from '@helpers/advancedSettingsStorage';
 /*
  * tweb-cn: Block sponsored messages (ads) feature.
  * Reads/writes localStorage key 'tweb_cn_block_ads' and injects/removes
@@ -20,12 +20,15 @@ function getStyleElement(): HTMLStyleElement {
 }
 
 export function isBlockSponsored(): boolean {
-  return localStorage.getItem(STORAGE_KEY) === '1';
+  return getAdvancedSetting(STORAGE_KEY, '0') === '1';
 }
 
 export function setBlockSponsored(enabled: boolean): void {
-  localStorage.setItem(STORAGE_KEY, enabled ? '1' : '0');
-  queueSyncToSavedMessages();
+  setAdvancedSetting(STORAGE_KEY, enabled ? '1' : '0');
+  applyBlockSponsored(enabled);
+}
+
+function applyBlockSponsored(enabled: boolean): void {
   if(enabled) {
     getStyleElement();
   } else {
@@ -35,7 +38,9 @@ export function setBlockSponsored(enabled: boolean): void {
 }
 
 export function initBlockSponsored(): void {
-  if(isBlockSponsored()) {
-    getStyleElement();
-  }
+  applyBlockSponsored(isBlockSponsored());
+}
+
+export function refreshBlockSponsored(): void {
+  applyBlockSponsored(isBlockSponsored());
 }

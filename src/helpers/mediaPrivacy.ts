@@ -1,4 +1,4 @@
-import {queueSyncToSavedMessages} from '@helpers/contentFilterSync';
+import {getAdvancedSetting, setAdvancedSetting, setAdvancedSettings} from '@helpers/advancedSettingsStorage';
 const STORAGE_ENABLED = 'tweb_cn_restrict_images';
 const STORAGE_MODE = 'tweb_cn_restrict_images_mode';
 const STORAGE_START = 'tweb_cn_restrict_images_start';
@@ -43,40 +43,43 @@ function scheduleBoundaryChange(): void {
 }
 
 export function isImageRestrictionEnabled(): boolean {
-  const stored = localStorage.getItem(STORAGE_ENABLED);
-  if(stored !== null) return stored === '1';
+  const stored = getAdvancedSetting(STORAGE_ENABLED);
+  if(stored) return stored === '1';
   return localStorage.getItem(LEGACY_BLOCK_AVATARS) === '1' ||
     localStorage.getItem(LEGACY_CLICK_TO_LOAD_STICKERS) === '1';
 }
 
 export function setImageRestrictionEnabled(enabled: boolean): void {
-  localStorage.setItem(STORAGE_ENABLED, enabled ? '1' : '0');
-  queueSyncToSavedMessages();
+  setAdvancedSetting(STORAGE_ENABLED, enabled ? '1' : '0');
   emitChange();
 }
 
 export function getImageRestrictionMode(): ImageRestrictionMode {
-  return localStorage.getItem(STORAGE_MODE) === 'scheduled' ? 'scheduled' : 'always';
+  return getAdvancedSetting(STORAGE_MODE, 'always') === 'scheduled' ? 'scheduled' : 'always';
 }
 
 export function setImageRestrictionMode(mode: ImageRestrictionMode): void {
-  localStorage.setItem(STORAGE_MODE, mode);
-  queueSyncToSavedMessages();
+  setAdvancedSetting(STORAGE_MODE, mode);
   emitChange();
 }
 
 export function getImageRestrictionStart(): string {
-  return localStorage.getItem(STORAGE_START) || '22:00';
+  return getAdvancedSetting(STORAGE_START, '22:00');
 }
 
 export function getImageRestrictionEnd(): string {
-  return localStorage.getItem(STORAGE_END) || '08:00';
+  return getAdvancedSetting(STORAGE_END, '08:00');
 }
 
 export function setImageRestrictionSchedule(start: string, end: string): void {
-  localStorage.setItem(STORAGE_START, start);
-  localStorage.setItem(STORAGE_END, end);
-  queueSyncToSavedMessages();
+  setAdvancedSettings({
+    [STORAGE_START]: start,
+    [STORAGE_END]: end
+  });
+  emitChange();
+}
+
+export function refreshImageRestriction(): void {
   emitChange();
 }
 

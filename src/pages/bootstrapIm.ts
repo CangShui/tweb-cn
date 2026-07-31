@@ -5,6 +5,10 @@ import isNativeVoiceRecorderSupported from '@helpers/voiceRecorder/isNativeSuppo
 import rootScope from '@lib/rootScope';
 
 import {disposeActiveAuthFlow} from '@/pages/mountAuthFlow';
+import {refreshContentFilter} from '@helpers/contentFilter';
+import {initializeAdvancedSettingsSync} from '@helpers/contentFilterSync';
+import {refreshImageRestriction} from '@helpers/mediaPrivacy';
+import {refreshBlockSponsored} from '@helpers/sponsoredMessages';
 import {isTestMode} from '@helpers/testMode';
 
 let bootstrapped = false;
@@ -55,6 +59,15 @@ export async function bootstrapIm(): Promise<void> {
     (window as any).Recorder = recorder.default;
   }
   appDialogsManager.start();
+
+  initializeAdvancedSettingsSync().then((initialized) => {
+    if(!initialized) return;
+
+    refreshBlockSponsored();
+    refreshContentFilter();
+    refreshImageRestriction();
+    console.warn('[tweb-cn] advanced settings initialized for peer=', rootScope.myId);
+  });
   // start() toggles body.is-left-column-shown synchronously
   // (appImManager.selectTab(CHATLIST)). The .main-column transform/opacity
   // transition in _chats.scss is gated by :not(.has-auth-pages) so the bar

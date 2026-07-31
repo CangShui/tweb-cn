@@ -69,7 +69,7 @@ export default function AdvancedSettings() {
     setMsgKeywords(val);
     clearTimeout(msgKwTimeout);
     msgKwTimeout = setTimeout(() => {
-      setMessageKeywords(val.replace(/\n/g, ','));
+      setMessageKeywords(val);
       refreshContentFilter();
     }, 400);
   };
@@ -80,7 +80,7 @@ export default function AdvancedSettings() {
     setUserKeywords_(val);
     clearTimeout(userKwTimeout);
     userKwTimeout = setTimeout(() => {
-      setUserKeywords(val.replace(/\n/g, ','));
+      setUserKeywords(val);
       refreshContentFilter();
     }, 400);
   };
