@@ -9,6 +9,7 @@ export const ADVANCED_SETTINGS_DEFAULTS: Record<string, string> = {
   tweb_cn_restrict_images_mode: 'always',
   tweb_cn_restrict_images_start: '22:00',
   tweb_cn_restrict_images_end: '08:00',
+  tweb_cn_hide_dialog_folders: '0',
   tweb_cn_msg_keywords: '',
   tweb_cn_user_keywords: '',
   tweb_cn_username_ids: ''

@@ -42,6 +42,14 @@ describe('advanced settings', () => {
     expect(settings.tweb_cn_block_image_avatars).toBeUndefined();
   });
 
+  test('keeps hide dialog folders switch in normalized snapshots', () => {
+    const settings = normalizeAdvancedSettings({
+      tweb_cn_hide_dialog_folders: '1'
+    });
+
+    expect(settings.tweb_cn_hide_dialog_folders).toBe('1');
+  });
+
   test('reads legacy sync messages after Telegram removes Markdown markers', () => {
     const payload = parseAdvancedSettingsSyncText(
       'TWEB_CN_SYNC_V1{"tweb_cn_msg_keywords":"airport,trial","_ts":"123","_v":"1"}',

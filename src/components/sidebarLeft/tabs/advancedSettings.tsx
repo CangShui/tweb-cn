@@ -4,6 +4,7 @@ import Row from '@components/rowTsx';
 import CheckboxFieldTsx from '@components/checkboxFieldTsx';
 import {useSuperTab} from '@components/solidJsTabs/superTabProvider';
 import {isBlockSponsored, setBlockSponsored} from '@helpers/sponsoredMessages';
+import {isHideDialogFolders, setHideDialogFolders} from '@helpers/dialogFoldersVisibility';
 import {
   getImageRestrictionEnd,
   getImageRestrictionMode,
@@ -27,6 +28,7 @@ export default function AdvancedSettings() {
 
   const [blockAdsChecked, setBlockAdsChecked] = createSignal(isBlockSponsored());
   const [blockPinnedChecked, setBlockPinnedChecked] = createSignal(isBlockPinned());
+  const [hideDialogFoldersChecked, setHideDialogFoldersChecked] = createSignal(isHideDialogFolders());
   const [imageRestrictionChecked, setImageRestrictionChecked] = createSignal(isImageRestrictionEnabled());
   const [imageRestrictionMode, setImageRestrictionMode_] = createSignal(getImageRestrictionMode());
   const [imageRestrictionStart, setImageRestrictionStart] = createSignal(getImageRestrictionStart());
@@ -43,6 +45,11 @@ export default function AdvancedSettings() {
   const onToggleBlockPinned = (checked: boolean) => {
     setBlockPinnedChecked(checked);
     setBlockPinned(checked);
+  };
+
+  const onToggleHideDialogFolders = (checked: boolean) => {
+    setHideDialogFoldersChecked(checked);
+    setHideDialogFolders(checked);
   };
 
   const onToggleImageRestriction = (checked: boolean) => {
@@ -129,6 +136,17 @@ export default function AdvancedSettings() {
               />
             </Row.CheckboxFieldToggle>
             <Row.Title>屏蔽置顶消息</Row.Title>
+          </Row>
+          <Row>
+            <Row.CheckboxFieldToggle>
+              <CheckboxFieldTsx
+                toggle
+                checked={hideDialogFoldersChecked()}
+                onChange={onToggleHideDialogFolders}
+              />
+            </Row.CheckboxFieldToggle>
+            <Row.Title>隐藏会话分类</Row.Title>
+            <Row.Subtitle>开启后仅显示所有会话列表</Row.Subtitle>
           </Row>
         </div>
       </Section>

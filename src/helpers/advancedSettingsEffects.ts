@@ -1,5 +1,6 @@
 import {ADVANCED_SETTINGS_CHANGE_EVENT} from '@helpers/advancedSettingsStorage';
 import {refreshContentFilter} from '@helpers/contentFilter';
+import {refreshHideDialogFolders} from '@helpers/dialogFoldersVisibility';
 import {refreshImageRestriction} from '@helpers/mediaPrivacy';
 import {refreshBlockSponsored} from '@helpers/sponsoredMessages';
 
@@ -10,6 +11,7 @@ export function applyAdvancedSettingsEffects(): void {
   refreshBlockSponsored();
   refreshContentFilter();
   refreshImageRestriction();
+  refreshHideDialogFolders();
 }
 
 export function scheduleAdvancedSettingsEffects(): void {

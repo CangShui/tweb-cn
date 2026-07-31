@@ -65,6 +65,7 @@ import noop from '@helpers/noop';
 import pause from '@helpers/schedulers/pause';
 import apiManagerProxy from '@lib/apiManagerProxy';
 import filterAsync from '@helpers/array/filterAsync';
+import {canUseDialogFolder} from '@helpers/dialogFoldersVisibility';
 import indexOfAndSplice from '@helpers/array/indexOfAndSplice';
 import {getMiddleware, MiddlewareHelper} from '@helpers/middleware';
 import Row, {RowMediaSizeType} from '@components/row'
@@ -623,6 +624,7 @@ export class AppDialogsManager {
             0,
             folders.folderItems.length - 1
           );
+          if(!canUseDialogFolder(newIndex)) return;
           folders.onClick()(newIndex);
         },
         verifyTouchTarget: () => {
@@ -734,6 +736,11 @@ export class AppDialogsManager {
 
     const {setSelectedFolderId, onClick, setOnClick, folderItems} = useFolders();
     const selectFolderByIndex = async(index: number) => {
+      if(!canUseDialogFolder(index)) {
+        console.warn('[tweb-cn] dialog folder selection blocked by advanced setting, index=', index);
+        return false;
+      }
+
       const id = folderItems[index]?.filter.id ?? FOLDER_ID_ALL;
       const wasFilterId = this.filterId;
 
