@@ -35,6 +35,7 @@ if(isDEV) {
 const handlebarsPlugin = handlebars({
   context: {
     title: 'hao123_上网从这里开始',
+    description: 'hao123是汇集全网优质网址及资源的中文上网导航。及时收录影视、音乐、小说、游戏等分类的网址和内容，让您的网络生活更简单精彩。上网，从hao123开始。',
     url: 'https://web.telegram.org/k/',
     origin: 'https://web.telegram.org/'
   }

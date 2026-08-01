@@ -1,0 +1,2 @@
+import{eY as r,b as n,m as a,p as i}from"./index-iOS9p36L.js";import{L as m}from"./mediaHeader-DTJcpf1_.js";import{u as c}from"./appDialogsManager-llBMVQ_V.js";const l="_Container_xlod8_1",C={Container:l},L=o=>{const{lottieLoader:t}=r(),e=c();return n(m,a({lottieLoader:t,onPromise:s=>e.collect(s),restartOnClick:!0,get class(){return i(o.class,C.Container)}},o))};export{L as S};
+//# sourceMappingURL=settingsTabLottieAnimation-Cqp6EoiK.js.map
