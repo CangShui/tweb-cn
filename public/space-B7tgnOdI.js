@@ -1,0 +1,2 @@
+import{e6 as o,s as a,ai as r,m as i,t as p}from"./index-DZfvr9W2.js";function l(n,t){if(n.focus(),o(n),t){const s=new KeyboardEvent(t.type,t);n.dispatchEvent(s)}}function u(n,t){return n.length===t.length&&n.every((s,e)=>s===t[e])}const c=p("<div>");function d(n){const[t,s]=a(n,["amount","withTransition"]);return(()=>{const e=c();return r(e,i(s,{get style(){return{"padding-top":t.amount,transition:t.withTransition?".2s":void 0}}}),!1,!1),e})()}export{d as S,u as c,l as f};
+//# sourceMappingURL=space-B7tgnOdI.js.map

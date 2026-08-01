@@ -5,17 +5,17 @@
     "description": "hao123是汇集全网优质网址及资源的中文上网导航。及时收录影视、音乐、小说、游戏等分类的网址和内容，让您的网络生活更简单精彩。上网，从hao123开始。",
     "icons": [
         {
-            "src": "assets/img/icon_square_192.png?v=XH95LJEdPn",
+            "src": "assets/img/icon_square_192.png?v=Kp8QwNvMzT",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "assets/img/icon_square_384.png?v=XH95LJEdPn",
+            "src": "assets/img/icon_square_384.png?v=Kp8QwNvMzT",
             "sizes": "384x384",
             "type": "image/png"
         },
         {
-            "src": "assets/img/icon_square_512.png?v=XH95LJEdPn",
+            "src": "assets/img/icon_square_512.png?v=Kp8QwNvMzT",
             "sizes": "512x512",
             "type": "image/png"
         }

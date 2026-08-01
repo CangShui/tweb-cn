@@ -1,0 +1,2 @@
+import{eY as m,c as a,dc as n,o as u}from"./index-DZfvr9W2.js";const c=()=>{const{rootScope:e}=m(),[t,s]=a(e.premium),r=new n;return r.add(e)("premium_toggle",o=>{s(o)}),u(()=>{r.removeAll()}),t};export{c as u};
+//# sourceMappingURL=useIsPremium-2Bqj1qQw.js.map

@@ -1,0 +1,2 @@
+import{aD as a}from"./index-DZfvr9W2.js";import{aX as t}from"./appDialogsManager-BBTWT37q.js";function o(e){const r=a();return{selector:new t({...e,multiSelect:!1,headerSearch:!0,placeholder:"SearchPlaceholder",meAsSaved:!1,onFirstRender:()=>{r.resolve()}}),loadPromise:r}}function n(e){return o({...e,peerType:["channelParticipants"]})}export{o as a,n as c};
+//# sourceMappingURL=participantsSelector-Cpjhlsjd.js.map
